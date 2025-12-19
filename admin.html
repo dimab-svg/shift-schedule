@@ -809,9 +809,7 @@ onchange="handleExcelFile(this)">
         let copiedDayRequirements = null;
         let actionLogs = [];
         
-        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 
-
-'Суббота'];
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         
         // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
@@ -956,15 +954,11 @@ onchange="handleExcelFile(this)">
         }
         
 async function clearAllBookings() {
-    if (!confirm('Вы уверены, что хотите удалить ВСЕ записи из графика?\n\nЭто действие НЕЛЬЗЯ 
-
-отменить!')) {
+    if (!confirm('Вы уверены, что хотите удалить ВСЕ записи из графика?\n\nЭто действие НЕЛЬЗЯ отменить!')) {
         return;
     }
     
-    if (!confirm('Это последнее предупреждение!\n\nВСЕ записи сотрудников в графике будут УДАЛЕНЫ!\nСами 
-
-сотрудники останутся в системе.\n\nПродолжить?')) {
+    if (!confirm('Это последнее предупреждение!\n\nВСЕ записи сотрудников в графике будут УДАЛЕНЫ!\nСами сотрудники останутся в системе.\n\nПродолжить?')) {
         return;
     }
     
@@ -1030,9 +1024,7 @@ async function clearAllBookings() {
             const container = document.getElementById('logsContainer');
             
             if (actionLogs.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #999;">Протокол 
-
-пуст</div>';
+                container.innerHTML = '<div style="text-align: center; color: #999;">Протокол пуст</div>';
                 return;
             }
             
@@ -1041,30 +1033,22 @@ async function clearAllBookings() {
                 const date = new Date(log.created_at);
                 const actionText = log.action_type === 'booked' ? '✅ Записался' : 
                                    log.action_type === 'cancelled' ? '❌ Отменил' :
-                                   log.action_type === 'clear_all' ? '🗑️ ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : 
-
-log.action_type;
+                                   log.action_type === 'clear_all' ? '🗑️ ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : log.action_type;
                 
                 const className = log.action_type === 'booked' ? 'log-booked' : 'log-cancelled';
                 
                 if (log.action_type === 'clear_all') {
                     html += `
-                        <div class="log-entry" style="background: #ffe0b2; color: #e65100; font-weight: 
-
-bold;">
+                        <div class="log-entry" style="background: #ffe0b2; color: #e65100; font-weight: bold;">
                             ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - Очистка всех записей
                         </div>
                     `;
                 } else {
                     html += `
                         <div class="log-entry ${className}">
-                            ${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - 
-
-${actionText} 
+                            ${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - ${actionText} 
                             ${log.date ? `на ${log.date}` : ''} 
-                            ${log.hour_slot !== null ? `${log.hour_slot}:00-${log.hour_slot + 1}:00` : 
-
-''}
+                            ${log.hour_slot !== null ? `${log.hour_slot}:00-${log.hour_slot + 1}:00` : ''}
                         </div>
                     `;
                 }
@@ -1087,18 +1071,12 @@ ${actionText}
                 const date = new Date(log.created_at);
                 const actionText = log.action_type === 'booked' ? 'Записался' : 
                                    log.action_type === 'cancelled' ? 'Отменил' :
-                                   log.action_type === 'clear_all' ? 'ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : 
-
-log.action_type;
+                                   log.action_type === 'clear_all' ? 'ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : log.action_type;
                 
                 if (log.action_type === 'clear_all') {
-                    text += `\n*** ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - ${actionText} ***
-
-\n\n`;
+                    text += `\n*** ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - ${actionText} ***\n\n`;
                 } else {
-                    text += `${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - 
-
-${actionText}`;
+                    text += `${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - ${actionText}`;
                     if (log.date) text += ` на ${log.date}`;
                     if (log.hour_slot !== null) text += ` ${log.hour_slot}:00-${log.hour_slot + 1}:00`;
                     text += '\n';
@@ -1214,9 +1192,7 @@ ${actionText}`;
                 // График ещё не открыт
                 const msUntilOpen = openFrom - moscowNow;
                 const daysUntilOpen = Math.floor(msUntilOpen / (1000 * 60 * 60 * 24));
-                const hoursUntilOpen = Math.floor((msUntilOpen % (1000 * 60 * 60 * 24)) / (1000 * 60 * 
-
-60));
+                const hoursUntilOpen = Math.floor((msUntilOpen % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutesUntilOpen = Math.floor((msUntilOpen % (1000 * 60 * 60)) / (1000 * 60));
                 
                 statusEl.className = 'status-indicator scheduled';
@@ -1259,9 +1235,7 @@ ${actionText}`;
                     По ${openUntil.toLocaleString('ru-RU')}<br><br>
                     <strong>До закрытия осталось:</strong> ${timeLeftStr}<br><br>
                     ${scheduleSettings.max_hours_enabled === 'true' ? 
-                      `<strong>⚠️ Ограничение:</strong> макс. ${scheduleSettings.max_hours_limit} часов в 
-
-неделю` : ''}
+                      `<strong>⚠️ Ограничение:</strong> макс. ${scheduleSettings.max_hours_limit} часов в неделю` : ''}
                 `;
                 
             } else {
@@ -1402,9 +1376,7 @@ ${actionText}`;
                 const dayName = daysOfWeek[currentDate.getDay()];
                 
                 html += `<tr>`;
-                html += `<td class="day-name">${dayName}<br>${currentDate.toLocaleDateString('ru-RU', 
-
-{day: 'numeric', month: 'numeric'})}</td>`;
+                html += `<td class="day-name">${dayName}<br>${currentDate.toLocaleDateString('ru-RU', {day: 'numeric', month: 'numeric'})}</td>`;
                 
                 for (let hour = 0; hour < 24; hour++) {
                     html += `
@@ -1430,9 +1402,7 @@ ${actionText}`;
         function setDefaultDates() {
             const today = new Date();
             document.getElementById('exportDateFrom').value = today.toISOString().split('T')[0];
-            document.getElementById('exportDateTo').value = new Date(today.getTime() + 6 * 24 * 60 * 60 
-
-* 1000).toISOString().split('T')[0];
+            document.getElementById('exportDateTo').value = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         }
         
         function showToast(message, type = 'info') {
