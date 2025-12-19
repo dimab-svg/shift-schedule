@@ -593,9 +593,7 @@
         let weekStartDate = null;
         let scheduleOpen = false;
         
-        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 
-
-'Суббота'];
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         const daysOfWeekShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
         
         document.addEventListener('DOMContentLoaded', () => {
@@ -706,15 +704,14 @@
                 countdownEl.textContent = countdown;
                 detailsEl.textContent = 'До закрытия осталось';
                 
-} else {
-  // График закрыт по времени
-  scheduleOpen = false;
-  timerEl.className = 'status-timer inactive';
-  titleEl.textContent = 'График ЗАКРЫТ';
-  countdownEl.textContent = '— : — —';
-  detailEl.textContent =
-    `Период редактирования завершён ${openUntil.toLocaleString('ru-RU')}`;
-}
+            } else {
+                // График закрыт по времени
+                scheduleOpen = false;
+                timerEl.className = 'status-timer inactive';
+                titleEl.textContent = '🔒 График ЗАКРЫТ';
+                countdownEl.textContent = '--:--:--';
+                detailsEl.textContent = `Период редактирования завершён ${openUntil.toLocaleString('ru-RU')}`;
+            }
         }
         
         // Проверка доступности редактирования через БД
@@ -744,13 +741,9 @@
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
             
             if (days > 0) {
-                return `${days}д ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, 
-
-'0')}:${seconds.toString().padStart(2, '0')}`;
+                return `${days}д ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:
-
-${seconds.toString().padStart(2, '0')}`;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
         async function loadSettings(silent = false) {
@@ -1029,9 +1022,7 @@ ${seconds.toString().padStart(2, '0')}`;
             }
             
             // Добавляем строку с требованиями/записано
-            html += '<tr class="summary-row"><td style="background: #fff3e0; font-weight: 
-
-bold;">Треб./Зап.</td>';
+            html += '<tr class="summary-row"><td style="background: #fff3e0; font-weight: bold;">Треб./Зап.</td>';
             
             // Подсчитываем общие требования для каждого часа недели
             for (let hour = 0; hour < 24; hour++) {
@@ -1132,9 +1123,7 @@ bold;">Треб./Зап.</td>';
                         // Для других сотрудников показываем только статус
                         row += `
                             <td>
-                                <div class="slot-button" style="cursor: default; ${isBooked ? 
-
-'background: #e8f5e9;' : ''}">
+                                <div class="slot-button" style="cursor: default; ${isBooked ? 'background: #e8f5e9;' : ''}">
                                     ${start}-${end}
                                     ${isBooked ? '✓' : ''}
                                 </div>
@@ -1206,9 +1195,7 @@ bold;">Треб./Зап.</td>';
         
         function openPersonalPage(employeeName) {
             const transliteratedName = transliterate(employeeName);
-            const url = `${window.location.origin}${window.location.pathname}?employee=
-
-${transliteratedName}`;
+            const url = `${window.location.origin}${window.location.pathname}?employee=${transliteratedName}`;
             window.open(url, '_blank');
         }
         
