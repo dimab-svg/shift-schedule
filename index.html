@@ -706,16 +706,15 @@
                 countdownEl.textContent = countdown;
                 detailsEl.textContent = 'До закрытия осталось';
                 
-            } else {
-                // График закрыт по времени
-                scheduleOpen = false;
-                timerEl.className = 'status-timer inactive';
-                titleEl.textContent = '🔒 График ЗАКРЫТ';
-                countdownEl.textContent = '--:--:--';
-                detailsEl.textContent = `Период редактирования завершён ${openUntil.toLocaleString('ru-
-
-RU')}`;
-            }
+} else {
+  // График закрыт по времени
+  scheduleOpen = false;
+  timerEl.className = 'status-timer inactive';
+  titleEl.textContent = 'График ЗАКРЫТ';
+  countdownEl.textContent = '— : — —';
+  detailEl.textContent =
+    `Период редактирования завершён ${openUntil.toLocaleString('ru-RU')}`;
+}
         }
         
         // Проверка доступности редактирования через БД
