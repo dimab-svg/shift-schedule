@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - График смен</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .admin-header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+        }
+        
+        .admin-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"] {
+            width: 100px;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        /* Стили для переключателя */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4caf50;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .toggle-label {
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+        
+        .hours-input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button.secondary {
+            background: #48bb78;
+        }
+        
+        .button.secondary:hover {
+            background: #38a169;
+        }
+        
+        .button.danger {
+            background: #f56565;
+        }
+        
+        .button.danger:hover {
+            background: #e53e3e;
+        }
+        
+        .button.warning {
+            background: #ed8936;
+        }
+        
+        .button.warning:hover {
+            background: #dd6b20;
+        }
+        
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .status-indicator .icon {
+            font-size: 24px;
+        }
+        
+        .status-indicator.active {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .status-indicator.inactive {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .status-indicator.scheduled {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeeba;
+        }
+        
+        .status-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .status-details strong {
+            color: #333;
+        }
+        
+        .current-time {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #0066cc;
+        }
+        
+        .live-time {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 16px;
+            color: #0052cc;
+        }
+        
+        .week-schedule-info {
+            background: #f0f8ff;
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .week-schedule-info h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+        
+        .danger-zone {
+            background: #fff5f5;
+            border: 2px solid #f56565;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .danger-zone h4 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        
+        /* Протокол действий */
+        .logs-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .log-entry:hover {
+            background: #fff;
+        }
+        
+        .log-booked {
+            color: #22543d;
+            background: #f0fff4;
+        }
+        
+        .log-cancelled {
+            color: #742a2a;
+            background: #fff5f5;
+        }
+        
+        /* Стили для таблицы требований */
+        .requirements-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .requirements-table th,
+        .requirements-table td {
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            padding: 4px;
+        }
+        
+        .requirements-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .requirements-table th.day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 14px;
+            padding: 10px;
+        }
+        
+        .requirements-table td.day-name {
+            background: #f0f0f0;
+            font-weight: 600;
+            padding: 10px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            width: 40px;
+        }
+        
+        .requirement-cell {
+            padding: 2px;
+        }
+        
+        .requirement-cell-input {
+            width: 35px;
+            height: 30px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            padding: 2px;
+        }
+        
+        .requirement-cell-input:focus {
+            border-color: #667eea;
+            outline: none;
+            background: #f0f8ff;
+        }
+        
+        .hour-label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .requirements-container {
+            overflow-x: auto;
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        
+        .employees-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .employee-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .employee-name {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            padding: 5px 10px;
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #e53e3e;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .toast.success {
+            background: #48bb78;
+        }
+        
+        .toast.error {
+            background: #f56565;
+        }
+        
+        .toast.info {
+            background: #4299e1;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: #333;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .info-box {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #2d3748;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🔧 Админ-панель управления графиком</h1>
+            <p class="subtitle">Управление сотрудниками, расписанием и экспорт данных</p>
+        </div>
+        
+        <!-- Табы -->
+        <div class="admin-section">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('schedule')">📅 График</button>
+                <button class="tab" onclick="switchTab('employees')">👥 Сотрудники</button>
+                <button class="tab" onclick="switchTab('requirements')">📊 Требования</button>
+                <button class="tab" onclick="switchTab('export')">📥 Экспорт</button>
+                <button class="tab" onclick="switchTab('logs')">📋 Протокол</button>
+            </div>
+            
+            <!-- Вкладка График -->
+<div id="schedule-tab" class="tab-content active">
+    <h2 class="section-title">Управление доступом к графику</h2>
+    
+    <div class="form-group">
+        <label for="weekStartDay">День начала рабочей недели:</label>
+        <select id="weekStartDay" onchange="updateWeekStartDay()">
+            <option value="1">Понедельник</option>
+            <option value="2">Вторник</option>
+            <option value="3">Среда</option>
+            <option value="4">Четверг</option>
+            <option value="5">Пятница</option>
+            <option value="6">Суббота</option>
+            <option value="0">Воскресенье</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="scheduleOpenFrom">Начало периода редактирования:</label>
+        <input type="datetime-local" id="scheduleOpenFrom">
+    </div>
+    
+    <div class="form-group">
+        <label for="scheduleOpenUntil">Конец периода редактирования:</label>
+        <input type="datetime-local" id="scheduleOpenUntil">
+    </div>
+    
+    <!-- Ограничение часов -->
+    <div class="toggle-container">
+        <label class="toggle-switch">
+            <input type="checkbox" id="maxHoursToggle" onchange="toggleMaxHours()">
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="toggle-label">Ограничение количества часов в неделю</div>
+        <div class="hours-input-container">
+            <label style="margin: 0;">Макс. часов:</label>
+            <input type="number" id="maxHoursLimit" min="1" max="168" value="30" disabled>
+        </div>
+    </div>
+    
+    <button class="button" onclick="updateScheduleSettings()">💾 Сохранить настройки</button>
+    
+    <div class="week-schedule-info">
+        <h4>📅 Информация о рабочей неделе:</h4>
+        <div id="weekInfo">Загрузка...</div>
+    </div>
+    
+    <!-- Панель статуса -->
+    <div class="status-panel">
+        <div id="scheduleStatus" class="status-indicator">
+            <span class="icon">⏳</span>
+            <span>Проверка статуса...</span>
+        </div>
+        
+        <div class="status-details">
+            <strong>Детали:</strong><br>
+            <div id="statusDetails">Загрузка...</div>
+        </div>
+        
+        <div class="current-time">
+            🕐 Текущее время (Москва): <span id="currentServerTime" class="live-time">--:--:--</span>
+        </div>
+    </div>
+    
+    <!-- Кнопка очистки внизу -->
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+        <p style="color: #666; margin-bottom: 15px;">
+            <strong>⚠️ Внимание:</strong> Очистка удалит все записи сотрудников в графике. Это действие 
+
+нельзя отменить!
+        </p>
+        <button class="button danger" onclick="clearAllBookings()">
+            🗑️ Очистить все записи графика
+        </button>
+    </div>
+</div>
+            
+            <!-- Вкладка Сотрудники -->
+            <div id="employees-tab" class="tab-content">
+                <h2 class="section-title">Управление списком сотрудников</h2>
+                
+                <div class="info-box">
+                    <h4>📝 Способы добавления сотрудников:</h4>
+                    <p>1. Вручную по одному<br>
+                    2. Загрузить Excel файл (.xlsx)<br>
+                    3. Массовое добавление (копировать-вставить)</p>
+                </div>
+                
+                <!-- Добавление вручную -->
+                <div class="form-group">
+                    <label for="newEmployeeName">Добавить сотрудника вручную:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newEmployeeName" placeholder="ФИО сотрудника" 
+
+style="flex: 1;">
+                        <button class="button secondary" onclick="addEmployee()">+ Добавить</button>
+                    </div>
+                </div>
+                
+                <!-- Загрузка Excel -->
+                <div class="form-group">
+                    <label>Загрузить из Excel файла:</label>
+                    <div class="file-input-wrapper">
+                        <button class="button secondary">📁 Выбрать Excel файл</button>
+                        <input type="file" class="file-input" accept=".xlsx,.xls" 
+
+onchange="handleExcelFile(this)">
+                    </div>
+                </div>
+                
+                <!-- Массовое добавление -->
+                <div class="form-group">
+                    <label for="bulkEmployees">Массовое добавление (каждый с новой строки):</label>
+                    <textarea id="bulkEmployees" placeholder="Иванов Иван Иванович
+Петров Петр Петрович
+Сидоров Сидор Сидорович"></textarea>
+                    <button class="button secondary" onclick="addBulkEmployees()">+ Добавить 
+
+всех</button>
+                </div>
+                
+                <!-- Список сотрудников -->
+                <div class="form-group">
+                    <label>Текущие сотрудники (<span id="employeeCount">0</span>):</label>
+                    <div class="employees-list" id="employeesList">
+                        <!-- Список будет загружен динамически -->
+                    </div>
+                </div>
+                
+                <button class="button danger" onclick="clearAllEmployees()">🗑️ Удалить всех 
+
+сотрудников</button>
+            </div>
+            
+            <!-- Вкладка Требования -->
+            <div id="requirements-tab" class="tab-content">
+                <h2 class="section-title">Настройка требований по часам на неделю</h2>
+                
+                <div class="info-box">
+                    <h4>📝 Инструкция:</h4>
+                    <p>Введите количество требуемых сотрудников для каждого часа.<br>
+                    Неделя начинается с дня, указанного в разделе "График".</p>
+                </div>
+                
+                <div class="requirements-container">
+                    <table class="requirements-table" id="requirementsTable">
+                        <!-- Таблица будет сгенерирована динамически -->
+                    </table>
+                </div>
+                
+                <button class="button" onclick="saveAllRequirements()">💾 Сохранить все 
+
+требования</button>
+                <button class="button secondary" onclick="copyDayRequirements()">📋 Копировать 
+
+день</button>
+                <button class="button secondary" onclick="pasteDayRequirements()">📝 Вставить 
+
+день</button>
+            </div>
+            
+            <!-- Вкладка Экспорт -->
+            <div id="export-tab" class="tab-content">
+                <h2 class="section-title">Экспорт данных</h2>
+                
+                <div class="info-box">
+                    <h4>📊 Доступные форматы экспорта:</h4>
+                    <p>Excel (.xlsx) - полная таблица с графиком<br>
+                    CSV - для импорта в другие системы<br>
+                    JSON - для программной обработки<br>
+                    TXT - протокол действий</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="exportDateRange">Период для экспорта:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="date" id="exportDateFrom" style="flex: 1;">
+                        <input type="date" id="exportDateTo" style="flex: 1;">
+                    </div>
+                </div>
+                
+                <button class="button" onclick="exportToExcel()">📊 Экспорт в Excel</button>
+                <button class="button secondary" onclick="exportToCSV()">📄 Экспорт в CSV</button>
+                <button class="button secondary" onclick="exportToJSON()">{ } Экспорт в JSON</button>
+                
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Быстрый экспорт:</label>
+                    <button class="button" onclick="exportCurrentWeek()">📅 Текущая неделя</button>
+                    <button class="button secondary" onclick="exportNextWeek()">📅 Следующая 
+
+неделя</button>
+                </div>
+            </div>
+            
+            <!-- Вкладка Протокол -->
+            <div id="logs-tab" class="tab-content">
+                <h2 class="section-title">Протокол действий сотрудников</h2>
+                
+                <div class="info-box">
+                    <h4>📋 История всех действий:</h4>
+                    <p>Здесь отображаются все записи и отмены сотрудников с точным временем.</p>
+                </div>
+                
+                <div class="form-group">
+                    <button class="button" onclick="loadActionLogs()">🔄 Обновить протокол</button>
+                    <button class="button secondary" onclick="exportLogs()">💾 Сохранить в TXT</button>
+                    <button class="button warning" onclick="clearLogs()">🗑️ Очистить протокол</button>
+                </div>
+                
+                <div class="logs-container" id="logsContainer">
+                    <!-- Логи будут загружены динамически -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ВАЖНО: Замените на ваши данные из Supabase
+        const SUPABASE_URL = 'https://gyraftcengparsbayrll.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_beR5cMb5U2NQUEwJ1Not2g_16xOcp1V';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentTab = 'schedule';
+        let employees = [];
+        let currentRequirements = {};
+        let scheduleSettings = {};
+        let liveTimeInterval = null;
+        let copiedDayRequirements = null;
+        let actionLogs = [];
+        
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 
+
+'Суббота'];
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadEmployees();
+            setDefaultDates();
+            startLiveClock();
+        });
+        
+        // Живые часы
+        function startLiveClock() {
+            updateLiveTime();
+            liveTimeInterval = setInterval(updateLiveTime, 1000);
+        }
+        
+        function updateLiveTime() {
+            const now = new Date();
+            // Конвертируем в московское время (UTC+3)
+            const moscowTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
+            
+            const timeEl = document.getElementById('currentServerTime');
+            if (timeEl) {
+                timeEl.textContent = moscowTime.toLocaleString('ru-RU', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+            
+            // Обновляем статус каждую минуту
+            if (moscowTime.getSeconds() === 0) {
+                updateScheduleStatus();
+            }
+        }
+        
+        function switchTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Деактивируем все табы
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показываем выбранную вкладку
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Активируем выбранный таб
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            
+            if (tabName === 'requirements') {
+                generateRequirementsTable();
+                loadWeekRequirements();
+            } else if (tabName === 'logs') {
+                loadActionLogs();
+            }
+        }
+        
+        async function loadSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('system_settings')
+                    .select('*');
+                
+                if (error) throw error;
+                
+                data.forEach(setting => {
+                    scheduleSettings[setting.setting_key] = setting.setting_value;
+                    
+                    if (setting.setting_key === 'schedule_open_from') {
+                        document.getElementById('scheduleOpenFrom').value = 
+                            setting.setting_value.replace(' ', 'T').substring(0, 16);
+                    }
+                    if (setting.setting_key === 'schedule_open_until') {
+                        document.getElementById('scheduleOpenUntil').value = 
+                            setting.setting_value.replace(' ', 'T').substring(0, 16);
+                    }
+                    if (setting.setting_key === 'week_start_day') {
+                        document.getElementById('weekStartDay').value = setting.setting_value || '1';
+                    }
+                    if (setting.setting_key === 'max_hours_enabled') {
+                        const checkbox = document.getElementById('maxHoursToggle');
+                        checkbox.checked = setting.setting_value === 'true';
+                        document.getElementById('maxHoursLimit').disabled = !checkbox.checked;
+                    }
+                    if (setting.setting_key === 'max_hours_limit') {
+                        document.getElementById('maxHoursLimit').value = setting.setting_value || '30';
+                    }
+                });
+                
+                updateScheduleStatus();
+                updateWeekInfo();
+                
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showToast('Ошибка загрузки настроек', 'error');
+            }
+        }
+        
+        function toggleMaxHours() {
+            const checkbox = document.getElementById('maxHoursToggle');
+            const input = document.getElementById('maxHoursLimit');
+            input.disabled = !checkbox.checked;
+            
+            // Сохраняем настройку
+            updateMaxHoursSettings();
+        }
+        
+        async function updateMaxHoursSettings() {
+            const enabled = document.getElementById('maxHoursToggle').checked;
+            const limit = document.getElementById('maxHoursLimit').value;
+            
+            try {
+                await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: enabled.toString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'max_hours_enabled');
+                
+                await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: limit,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'max_hours_limit');
+                
+                showToast('Настройки ограничения часов обновлены', 'success');
+            } catch (error) {
+                console.error('Error updating max hours settings:', error);
+                showToast('Ошибка обновления настроек', 'error');
+            }
+        }
+        
+async function clearAllBookings() {
+    if (!confirm('Вы уверены, что хотите удалить ВСЕ записи из графика?\n\nЭто действие НЕЛЬЗЯ 
+
+отменить!')) {
+        return;
+    }
+    
+    if (!confirm('Это последнее предупреждение!\n\nВСЕ записи сотрудников в графике будут УДАЛЕНЫ!\nСами 
+
+сотрудники останутся в системе.\n\nПродолжить?')) {
+        return;
+    }
+    
+    try {
+        // Сначала пробуем через функцию
+        const { data, error } = await supabaseClient.rpc('clear_all_bookings');
+        
+        if (error) {
+            // Если функция не работает, удаляем напрямую
+            console.error('RPC error:', error);
+            
+            // Альтернативный метод - прямое удаление
+            const { data: deleteData, error: deleteError } = await supabaseClient
+                .from('schedule_bookings')
+                .delete()
+                .neq('id', 0); // Удаляем все записи
+            
+            if (deleteError) throw deleteError;
+            
+            // Логируем действие
+            await supabaseClient
+                .from('action_logs')
+                .insert({
+                    employee_name: 'ADMIN',
+                    action_type: 'clear_all',
+                    created_at: new Date().toISOString()
+                });
+            
+            showToast('Все записи графика удалены', 'success');
+        } else {
+            showToast(data.message || 'Записи удалены', 'success');
+        }
+        
+        // Обновляем протокол если открыт
+        if (currentTab === 'logs') {
+            loadActionLogs();
+        }
+    } catch (error) {
+        console.error('Error clearing bookings:', error);
+        showToast('Ошибка очистки записей: ' + error.message, 'error');
+    }
+}
+        
+        async function loadActionLogs() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('action_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(500);
+                
+                if (error) throw error;
+                
+                actionLogs = data;
+                displayLogs();
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                showToast('Ошибка загрузки протокола', 'error');
+            }
+        }
+        
+        function displayLogs() {
+            const container = document.getElementById('logsContainer');
+            
+            if (actionLogs.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #999;">Протокол 
+
+пуст</div>';
+                return;
+            }
+            
+            let html = '';
+            actionLogs.forEach(log => {
+                const date = new Date(log.created_at);
+                const actionText = log.action_type === 'booked' ? '✅ Записался' : 
+                                   log.action_type === 'cancelled' ? '❌ Отменил' :
+                                   log.action_type === 'clear_all' ? '🗑️ ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : 
+
+log.action_type;
+                
+                const className = log.action_type === 'booked' ? 'log-booked' : 'log-cancelled';
+                
+                if (log.action_type === 'clear_all') {
+                    html += `
+                        <div class="log-entry" style="background: #ffe0b2; color: #e65100; font-weight: 
+
+bold;">
+                            ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - Очистка всех записей
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="log-entry ${className}">
+                            ${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - 
+
+${actionText} 
+                            ${log.date ? `на ${log.date}` : ''} 
+                            ${log.hour_slot !== null ? `${log.hour_slot}:00-${log.hour_slot + 1}:00` : 
+
+''}
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function exportLogs() {
+            if (actionLogs.length === 0) {
+                showToast('Протокол пуст', 'error');
+                return;
+            }
+            
+            let text = 'ПРОТОКОЛ ДЕЙСТВИЙ СОТРУДНИКОВ\n';
+            text += '================================\n\n';
+            text += `Сформирован: ${new Date().toLocaleString('ru-RU')}\n\n`;
+            
+            actionLogs.forEach(log => {
+                const date = new Date(log.created_at);
+                const actionText = log.action_type === 'booked' ? 'Записался' : 
+                                   log.action_type === 'cancelled' ? 'Отменил' :
+                                   log.action_type === 'clear_all' ? 'ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : 
+
+log.action_type;
+                
+                if (log.action_type === 'clear_all') {
+                    text += `\n*** ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - ${actionText} ***
+
+\n\n`;
+                } else {
+                    text += `${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - 
+
+${actionText}`;
+                    if (log.date) text += ` на ${log.date}`;
+                    if (log.hour_slot !== null) text += ` ${log.hour_slot}:00-${log.hour_slot + 1}:00`;
+                    text += '\n';
+                }
+            });
+            
+            // Скачиваем файл
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Протокол_${new Date().toISOString().split('T')[0]}.txt`;
+            link.click();
+            
+            showToast('Протокол сохранён', 'success');
+        }
+        
+        async function clearLogs() {
+            if (!confirm('Очистить весь протокол действий?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('action_logs')
+                    .delete()
+                    .neq('id', 0); // Удаляем все записи
+                
+                if (error) throw error;
+                
+                actionLogs = [];
+                displayLogs();
+                showToast('Протокол очищен', 'success');
+            } catch (error) {
+                console.error('Error clearing logs:', error);
+                showToast('Ошибка очистки протокола', 'error');
+            }
+        }
+        
+        function updateWeekInfo() {
+            const weekStartDay = parseInt(document.getElementById('weekStartDay').value || '1');
+            const today = new Date();
+            
+            // Находим следующий день начала недели
+            const daysUntilStart = (weekStartDay - today.getDay() + 7) % 7 || 7;
+            const nextWeekStart = new Date(today);
+            nextWeekStart.setDate(today.getDate() + daysUntilStart);
+            
+            const nextWeekEnd = new Date(nextWeekStart);
+            nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
+            
+            const weekInfoEl = document.getElementById('weekInfo');
+            weekInfoEl.innerHTML = `
+                <strong>Следующая рабочая неделя:</strong><br>
+                С ${daysOfWeek[weekStartDay]} ${nextWeekStart.toLocaleDateString('ru-RU')}<br>
+                По ${daysOfWeek[(weekStartDay + 6) % 7]} ${nextWeekEnd.toLocaleDateString('ru-RU')}
+            `;
+        }
+        
+        async function updateWeekStartDay() {
+            const weekStartDay = document.getElementById('weekStartDay').value;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: weekStartDay,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'week_start_day');
+                
+                if (!error) {
+                    // Если записи нет, создаем её
+                    await supabaseClient
+                        .from('system_settings')
+                        .upsert({ 
+                            setting_key: 'week_start_day',
+                            setting_value: weekStartDay
+                        });
+                }
+                
+                updateWeekInfo();
+                showToast('День начала недели обновлён', 'success');
+            } catch (error) {
+                console.error('Error updating week start day:', error);
+                showToast('Ошибка обновления', 'error');
+            }
+        }
+        
+        function updateScheduleStatus() {
+            const now = new Date();
+            // Московское время
+            const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
+            
+            const statusEl = document.getElementById('scheduleStatus');
+            const detailsEl = document.getElementById('statusDetails');
+            
+            // Проверяем настройки
+            if (!scheduleSettings.schedule_open_from || !scheduleSettings.schedule_open_until) {
+                statusEl.className = 'status-indicator inactive';
+                statusEl.innerHTML = `
+                    <span class="icon">⚠️</span>
+                    <span>Период не настроен</span>
+                `;
+                detailsEl.innerHTML = 'Установите период редактирования';
+                return;
+            }
+            
+            const openFrom = new Date(scheduleSettings.schedule_open_from);
+            const openUntil = new Date(scheduleSettings.schedule_open_until);
+            
+            // Определяем статус
+            if (moscowNow < openFrom) {
+                // График ещё не открыт
+                const msUntilOpen = openFrom - moscowNow;
+                const daysUntilOpen = Math.floor(msUntilOpen / (1000 * 60 * 60 * 24));
+                const hoursUntilOpen = Math.floor((msUntilOpen % (1000 * 60 * 60 * 24)) / (1000 * 60 * 
+
+60));
+                const minutesUntilOpen = Math.floor((msUntilOpen % (1000 * 60 * 60)) / (1000 * 60));
+                
+                statusEl.className = 'status-indicator scheduled';
+                statusEl.innerHTML = `
+                    <span class="icon">⏰</span>
+                    <span>График откроется позже</span>
+                `;
+                
+                let timeLeftStr = '';
+                if (daysUntilOpen > 0) timeLeftStr += `${daysUntilOpen} дн. `;
+                timeLeftStr += `${hoursUntilOpen} ч. ${minutesUntilOpen} мин.`;
+                
+                detailsEl.innerHTML = `
+                    <strong>Период редактирования:</strong><br>
+                    С ${openFrom.toLocaleString('ru-RU')}<br>
+                    По ${openUntil.toLocaleString('ru-RU')}<br><br>
+                    <strong>До открытия осталось:</strong> ${timeLeftStr}
+                `;
+                
+            } else if (moscowNow >= openFrom && moscowNow <= openUntil) {
+                // График активен
+                const msLeft = openUntil - moscowNow;
+                const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+                const hoursLeft = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutesLeft = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+                
+                statusEl.className = 'status-indicator active';
+                statusEl.innerHTML = `
+                    <span class="icon">✅</span>
+                    <span>График ОТКРЫТ для редактирования</span>
+                `;
+                
+                let timeLeftStr = '';
+                if (daysLeft > 0) timeLeftStr += `${daysLeft} дн. `;
+                timeLeftStr += `${hoursLeft} ч. ${minutesLeft} мин.`;
+                
+                detailsEl.innerHTML = `
+                    <strong>Период редактирования:</strong><br>
+                    С ${openFrom.toLocaleString('ru-RU')}<br>
+                    По ${openUntil.toLocaleString('ru-RU')}<br><br>
+                    <strong>До закрытия осталось:</strong> ${timeLeftStr}<br><br>
+                    ${scheduleSettings.max_hours_enabled === 'true' ? 
+                      `<strong>⚠️ Ограничение:</strong> макс. ${scheduleSettings.max_hours_limit} часов в 
+
+неделю` : ''}
+                `;
+                
+            } else {
+                // График закрыт
+                statusEl.className = 'status-indicator inactive';
+                statusEl.innerHTML = `
+                    <span class="icon">🔒</span>
+                    <span>График ЗАКРЫТ</span>
+                `;
+                
+                detailsEl.innerHTML = `
+                    <strong>Период редактирования завершён</strong><br>
+                    Был открыт с ${openFrom.toLocaleString('ru-RU')}<br>
+                    по ${openUntil.toLocaleString('ru-RU')}<br><br>
+                    Установите новый период для открытия графика.
+                `;
+            }
+        }
+        
+        async function updateScheduleSettings() {
+            const openFrom = document.getElementById('scheduleOpenFrom').value;
+            const openUntil = document.getElementById('scheduleOpenUntil').value;
+            const maxHoursEnabled = document.getElementById('maxHoursToggle').checked;
+            const maxHoursLimit = document.getElementById('maxHoursLimit').value;
+            
+            if (!openFrom || !openUntil) {
+                showToast('Заполните оба поля времени', 'error');
+                return;
+            }
+            
+            // Проверяем корректность дат
+            if (new Date(openFrom) >= new Date(openUntil)) {
+                showToast('Дата окончания должна быть позже даты начала', 'error');
+                return;
+            }
+            
+            try {
+                // Обновляем все настройки
+                const updates = [
+                    { key: 'schedule_open_from', value: openFrom.replace('T', ' ') + ':00' },
+                    { key: 'schedule_open_until', value: openUntil.replace('T', ' ') + ':00' },
+                    { key: 'is_schedule_active', value: 'true' },
+                    { key: 'max_hours_enabled', value: maxHoursEnabled.toString() },
+                    { key: 'max_hours_limit', value: maxHoursLimit }
+                ];
+                
+                for (const update of updates) {
+                    const { error } = await supabaseClient
+                        .from('system_settings')
+                        .update({ 
+                            setting_value: update.value,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('setting_key', update.key);
+                    
+                    if (error) throw error;
+                }
+                
+                // Обновляем локальные настройки
+                scheduleSettings.schedule_open_from = openFrom.replace('T', ' ') + ':00';
+                scheduleSettings.schedule_open_until = openUntil.replace('T', ' ') + ':00';
+                scheduleSettings.is_schedule_active = 'true';
+                scheduleSettings.max_hours_enabled = maxHoursEnabled.toString();
+                scheduleSettings.max_hours_limit = maxHoursLimit;
+                
+                // Обновляем статус
+                updateScheduleStatus();
+                
+                showToast('Настройки сохранены', 'success');
+            } catch (error) {
+                console.error('Error updating settings:', error);
+                showToast('Ошибка сохранения настроек: ' + error.message, 'error');
+            }
+        }
+        
+        // Остальные функции (сотрудники, требования, экспорт) остаются без изменений...
+        // [Здесь остальной код функций, который не изменялся]
+        
+        async function loadEmployees() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order');
+                
+                if (error) throw error;
+                
+                employees = data;
+                updateEmployeesList();
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            }
+        }
+        
+        function updateEmployeesList() {
+            const listEl = document.getElementById('employeesList');
+            const countEl = document.getElementById('employeeCount');
+            
+            countEl.textContent = employees.length;
+            
+            if (employees.length === 0) {
+                listEl.innerHTML = '<p style="color: #999; text-align: center;">Список пуст</p>';
+                return;
+            }
+            
+            listEl.innerHTML = employees.map((emp, index) => `
+                <div class="employee-item">
+                    <span class="employee-name">${index + 1}. ${emp.full_name}</span>
+                    <button class="delete-btn" onclick="deleteEmployee(${emp.id})">Удалить</button>
+                </div>
+            `).join('');
+        }
+        
+        // Генерация таблицы требований
+        function generateRequirementsTable() {
+            const weekStartDay = parseInt(document.getElementById('weekStartDay').value || '1');
+            const today = new Date();
+            
+            // Находим следующий день начала недели
+            const daysUntilStart = (weekStartDay - today.getDay() + 7) % 7 || 7;
+            const nextWeekStart = new Date(today);
+            nextWeekStart.setDate(today.getDate() + daysUntilStart);
+            
+            let html = '<thead><tr><th>День</th>';
+            
+            // Заголовки часов
+            for (let hour = 0; hour < 24; hour++) {
+                html += `<th>${hour.toString().padStart(2, '0')}:00</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            
+            // Строки для каждого дня недели
+            for (let day = 0; day < 7; day++) {
+                const currentDate = new Date(nextWeekStart);
+                currentDate.setDate(nextWeekStart.getDate() + day);
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const dayName = daysOfWeek[currentDate.getDay()];
+                
+                html += `<tr>`;
+                html += `<td class="day-name">${dayName}<br>${currentDate.toLocaleDateString('ru-RU', 
+
+{day: 'numeric', month: 'numeric'})}</td>`;
+                
+                for (let hour = 0; hour < 24; hour++) {
+                    html += `
+                        <td class="requirement-cell">
+                            <input type="number" 
+                                   class="requirement-cell-input" 
+                                   id="req_${dateStr}_${hour}"
+                                   data-date="${dateStr}"
+                                   data-hour="${hour}"
+                                   min="0" 
+                                   max="99"
+                                   value="0">
+                        </td>
+                    `;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody>';
+            
+            document.getElementById('requirementsTable').innerHTML = html;
+        }
+        
+        function setDefaultDates() {
+            const today = new Date();
+            document.getElementById('exportDateFrom').value = today.toISOString().split('T')[0];
+            document.getElementById('exportDateTo').value = new Date(today.getTime() + 6 * 24 * 60 * 60 
+
+* 1000).toISOString().split('T')[0];
+        }
+        
+        function showToast(message, type = 'info') {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Очистка интервала при закрытии страницы
+        window.addEventListener('beforeunload', () => {
+            if (liveTimeInterval) {
+                clearInterval(liveTimeInterval);
+            }
+        });
+    </script>
+</body>
+</html>
