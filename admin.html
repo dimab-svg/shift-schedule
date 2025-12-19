@@ -70,7 +70,6 @@
         }
         
         input[type="text"],
-        input[type="number"],
         input[type="datetime-local"],
         input[type="url"],
         textarea,
@@ -81,10 +80,6 @@
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s;
-        }
-        
-        input[type="number"] {
-            width: 100px;
         }
         
         input:focus,
@@ -98,73 +93,6 @@
             min-height: 150px;
             resize: vertical;
             font-family: monospace;
-        }
-        
-        /* Стили для переключателя */
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 30px;
-        }
-        
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .toggle-slider {
-            background-color: #4caf50;
-        }
-        
-        input:checked + .toggle-slider:before {
-            transform: translateX(30px);
-        }
-        
-        .toggle-label {
-            font-weight: 600;
-            color: #333;
-            flex: 1;
-        }
-        
-        .hours-input-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .button {
@@ -200,14 +128,6 @@
         
         .button.danger:hover {
             background: #e53e3e;
-        }
-        
-        .button.warning {
-            background: #ed8936;
-        }
-        
-        .button.warning:hover {
-            background: #dd6b20;
         }
         
         .button:disabled {
@@ -296,50 +216,6 @@
         .week-schedule-info h4 {
             color: #2c5282;
             margin-bottom: 10px;
-        }
-        
-        .danger-zone {
-            background: #fff5f5;
-            border: 2px solid #f56565;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-        }
-        
-        .danger-zone h4 {
-            color: #c53030;
-            margin-bottom: 10px;
-        }
-        
-        /* Протокол действий */
-        .logs-container {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-        
-        .log-entry {
-            padding: 5px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .log-entry:hover {
-            background: #fff;
-        }
-        
-        .log-booked {
-            color: #22543d;
-            background: #f0fff4;
-        }
-        
-        .log-cancelled {
-            color: #742a2a;
-            background: #fff5f5;
         }
         
         /* Стили для таблицы требований */
@@ -574,85 +450,59 @@
                 <button class="tab" onclick="switchTab('employees')">👥 Сотрудники</button>
                 <button class="tab" onclick="switchTab('requirements')">📊 Требования</button>
                 <button class="tab" onclick="switchTab('export')">📥 Экспорт</button>
-                <button class="tab" onclick="switchTab('logs')">📋 Протокол</button>
             </div>
             
             <!-- Вкладка График -->
-<div id="schedule-tab" class="tab-content active">
-    <h2 class="section-title">Управление доступом к графику</h2>
-    
-    <div class="form-group">
-        <label for="weekStartDay">День начала рабочей недели:</label>
-        <select id="weekStartDay" onchange="updateWeekStartDay()">
-            <option value="1">Понедельник</option>
-            <option value="2">Вторник</option>
-            <option value="3">Среда</option>
-            <option value="4">Четверг</option>
-            <option value="5">Пятница</option>
-            <option value="6">Суббота</option>
-            <option value="0">Воскресенье</option>
-        </select>
-    </div>
-    
-    <div class="form-group">
-        <label for="scheduleOpenFrom">Начало периода редактирования:</label>
-        <input type="datetime-local" id="scheduleOpenFrom">
-    </div>
-    
-    <div class="form-group">
-        <label for="scheduleOpenUntil">Конец периода редактирования:</label>
-        <input type="datetime-local" id="scheduleOpenUntil">
-    </div>
-    
-    <!-- Ограничение часов -->
-    <div class="toggle-container">
-        <label class="toggle-switch">
-            <input type="checkbox" id="maxHoursToggle" onchange="toggleMaxHours()">
-            <span class="toggle-slider"></span>
-        </label>
-        <div class="toggle-label">Ограничение количества часов в неделю</div>
-        <div class="hours-input-container">
-            <label style="margin: 0;">Макс. часов:</label>
-            <input type="number" id="maxHoursLimit" min="1" max="168" value="30" disabled>
-        </div>
-    </div>
-    
-    <button class="button" onclick="updateScheduleSettings()">💾 Сохранить настройки</button>
-    
-    <div class="week-schedule-info">
-        <h4>📅 Информация о рабочей неделе:</h4>
-        <div id="weekInfo">Загрузка...</div>
-    </div>
-    
-    <!-- Панель статуса -->
-    <div class="status-panel">
-        <div id="scheduleStatus" class="status-indicator">
-            <span class="icon">⏳</span>
-            <span>Проверка статуса...</span>
-        </div>
-        
-        <div class="status-details">
-            <strong>Детали:</strong><br>
-            <div id="statusDetails">Загрузка...</div>
-        </div>
-        
-        <div class="current-time">
-            🕐 Текущее время (Москва): <span id="currentServerTime" class="live-time">--:--:--</span>
-        </div>
-    </div>
-    
-    <!-- Кнопка очистки внизу -->
-    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
-        <p style="color: #666; margin-bottom: 15px;">
-            <strong>⚠️ Внимание:</strong> Очистка удалит все записи сотрудников в графике. Это действие 
-
-нельзя отменить!
-        </p>
-        <button class="button danger" onclick="clearAllBookings()">
-            🗑️ Очистить все записи графика
-        </button>
-    </div>
-</div>
+            <div id="schedule-tab" class="tab-content active">
+                <h2 class="section-title">Управление доступом к графику</h2>
+                
+                <div class="form-group">
+                    <label for="weekStartDay">День начала рабочей недели:</label>
+                    <select id="weekStartDay" onchange="updateWeekStartDay()">
+                        <option value="1">Понедельник</option>
+                        <option value="2">Вторник</option>
+                        <option value="3">Среда</option>
+                        <option value="4">Четверг</option>
+                        <option value="5">Пятница</option>
+                        <option value="6">Суббота</option>
+                        <option value="0">Воскресенье</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scheduleOpenFrom">Начало периода редактирования:</label>
+                    <input type="datetime-local" id="scheduleOpenFrom">
+                </div>
+                
+                <div class="form-group">
+                    <label for="scheduleOpenUntil">Конец периода редактирования:</label>
+                    <input type="datetime-local" id="scheduleOpenUntil">
+                </div>
+                
+                <button class="button" onclick="updateScheduleSettings()">💾 Сохранить настройки</button>
+                
+                <div class="week-schedule-info">
+                    <h4>📅 Информация о рабочей неделе:</h4>
+                    <div id="weekInfo">Загрузка...</div>
+                </div>
+                
+                <!-- Панель статуса -->
+                <div class="status-panel">
+                    <div id="scheduleStatus" class="status-indicator">
+                        <span class="icon">⏳</span>
+                        <span>Проверка статуса...</span>
+                    </div>
+                    
+                    <div class="status-details">
+                        <strong>Детали:</strong><br>
+                        <div id="statusDetails">Загрузка...</div>
+                    </div>
+                    
+                    <div class="current-time">
+                        🕐 Текущее время (Москва): <span id="currentServerTime" class="live-time">--:--:--</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Вкладка Сотрудники -->
             <div id="employees-tab" class="tab-content">
@@ -669,9 +519,7 @@
                 <div class="form-group">
                     <label for="newEmployeeName">Добавить сотрудника вручную:</label>
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" id="newEmployeeName" placeholder="ФИО сотрудника" 
-
-style="flex: 1;">
+                        <input type="text" id="newEmployeeName" placeholder="ФИО сотрудника" style="flex: 1;">
                         <button class="button secondary" onclick="addEmployee()">+ Добавить</button>
                     </div>
                 </div>
@@ -681,9 +529,7 @@ style="flex: 1;">
                     <label>Загрузить из Excel файла:</label>
                     <div class="file-input-wrapper">
                         <button class="button secondary">📁 Выбрать Excel файл</button>
-                        <input type="file" class="file-input" accept=".xlsx,.xls" 
-
-onchange="handleExcelFile(this)">
+                        <input type="file" class="file-input" accept=".xlsx,.xls" onchange="handleExcelFile(this)">
                     </div>
                 </div>
                 
@@ -693,9 +539,7 @@ onchange="handleExcelFile(this)">
                     <textarea id="bulkEmployees" placeholder="Иванов Иван Иванович
 Петров Петр Петрович
 Сидоров Сидор Сидорович"></textarea>
-                    <button class="button secondary" onclick="addBulkEmployees()">+ Добавить 
-
-всех</button>
+                    <button class="button secondary" onclick="addBulkEmployees()">+ Добавить всех</button>
                 </div>
                 
                 <!-- Список сотрудников -->
@@ -706,9 +550,7 @@ onchange="handleExcelFile(this)">
                     </div>
                 </div>
                 
-                <button class="button danger" onclick="clearAllEmployees()">🗑️ Удалить всех 
-
-сотрудников</button>
+                <button class="button danger" onclick="clearAllEmployees()">🗑️ Удалить всех сотрудников</button>
             </div>
             
             <!-- Вкладка Требования -->
@@ -727,15 +569,9 @@ onchange="handleExcelFile(this)">
                     </table>
                 </div>
                 
-                <button class="button" onclick="saveAllRequirements()">💾 Сохранить все 
-
-требования</button>
-                <button class="button secondary" onclick="copyDayRequirements()">📋 Копировать 
-
-день</button>
-                <button class="button secondary" onclick="pasteDayRequirements()">📝 Вставить 
-
-день</button>
+                <button class="button" onclick="saveAllRequirements()">💾 Сохранить все требования</button>
+                <button class="button secondary" onclick="copyDayRequirements()">📋 Копировать день</button>
+                <button class="button secondary" onclick="pasteDayRequirements()">📝 Вставить день</button>
             </div>
             
             <!-- Вкладка Экспорт -->
@@ -746,8 +582,7 @@ onchange="handleExcelFile(this)">
                     <h4>📊 Доступные форматы экспорта:</h4>
                     <p>Excel (.xlsx) - полная таблица с графиком<br>
                     CSV - для импорта в другие системы<br>
-                    JSON - для программной обработки<br>
-                    TXT - протокол действий</p>
+                    JSON - для программной обработки</p>
                 </div>
                 
                 <div class="form-group">
@@ -765,29 +600,7 @@ onchange="handleExcelFile(this)">
                 <div class="form-group" style="margin-top: 30px;">
                     <label>Быстрый экспорт:</label>
                     <button class="button" onclick="exportCurrentWeek()">📅 Текущая неделя</button>
-                    <button class="button secondary" onclick="exportNextWeek()">📅 Следующая 
-
-неделя</button>
-                </div>
-            </div>
-            
-            <!-- Вкладка Протокол -->
-            <div id="logs-tab" class="tab-content">
-                <h2 class="section-title">Протокол действий сотрудников</h2>
-                
-                <div class="info-box">
-                    <h4>📋 История всех действий:</h4>
-                    <p>Здесь отображаются все записи и отмены сотрудников с точным временем.</p>
-                </div>
-                
-                <div class="form-group">
-                    <button class="button" onclick="loadActionLogs()">🔄 Обновить протокол</button>
-                    <button class="button secondary" onclick="exportLogs()">💾 Сохранить в TXT</button>
-                    <button class="button warning" onclick="clearLogs()">🗑️ Очистить протокол</button>
-                </div>
-                
-                <div class="logs-container" id="logsContainer">
-                    <!-- Логи будут загружены динамически -->
+                    <button class="button secondary" onclick="exportNextWeek()">📅 Следующая неделя</button>
                 </div>
             </div>
         </div>
@@ -807,7 +620,6 @@ onchange="handleExcelFile(this)">
         let scheduleSettings = {};
         let liveTimeInterval = null;
         let copiedDayRequirements = null;
-        let actionLogs = [];
         
         const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         
@@ -870,8 +682,6 @@ onchange="handleExcelFile(this)">
             if (tabName === 'requirements') {
                 generateRequirementsTable();
                 loadWeekRequirements();
-            } else if (tabName === 'logs') {
-                loadActionLogs();
             }
         }
         
@@ -897,14 +707,6 @@ onchange="handleExcelFile(this)">
                     if (setting.setting_key === 'week_start_day') {
                         document.getElementById('weekStartDay').value = setting.setting_value || '1';
                     }
-                    if (setting.setting_key === 'max_hours_enabled') {
-                        const checkbox = document.getElementById('maxHoursToggle');
-                        checkbox.checked = setting.setting_value === 'true';
-                        document.getElementById('maxHoursLimit').disabled = !checkbox.checked;
-                    }
-                    if (setting.setting_key === 'max_hours_limit') {
-                        document.getElementById('maxHoursLimit').value = setting.setting_value || '30';
-                    }
                 });
                 
                 updateScheduleStatus();
@@ -913,205 +715,6 @@ onchange="handleExcelFile(this)">
             } catch (error) {
                 console.error('Error loading settings:', error);
                 showToast('Ошибка загрузки настроек', 'error');
-            }
-        }
-        
-        function toggleMaxHours() {
-            const checkbox = document.getElementById('maxHoursToggle');
-            const input = document.getElementById('maxHoursLimit');
-            input.disabled = !checkbox.checked;
-            
-            // Сохраняем настройку
-            updateMaxHoursSettings();
-        }
-        
-        async function updateMaxHoursSettings() {
-            const enabled = document.getElementById('maxHoursToggle').checked;
-            const limit = document.getElementById('maxHoursLimit').value;
-            
-            try {
-                await supabaseClient
-                    .from('system_settings')
-                    .update({ 
-                        setting_value: enabled.toString(),
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('setting_key', 'max_hours_enabled');
-                
-                await supabaseClient
-                    .from('system_settings')
-                    .update({ 
-                        setting_value: limit,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('setting_key', 'max_hours_limit');
-                
-                showToast('Настройки ограничения часов обновлены', 'success');
-            } catch (error) {
-                console.error('Error updating max hours settings:', error);
-                showToast('Ошибка обновления настроек', 'error');
-            }
-        }
-        
-async function clearAllBookings() {
-    if (!confirm('Вы уверены, что хотите удалить ВСЕ записи из графика?\n\nЭто действие НЕЛЬЗЯ отменить!')) {
-        return;
-    }
-    
-    if (!confirm('Это последнее предупреждение!\n\nВСЕ записи сотрудников в графике будут УДАЛЕНЫ!\nСами сотрудники останутся в системе.\n\nПродолжить?')) {
-        return;
-    }
-    
-    try {
-        // Сначала пробуем через функцию
-        const { data, error } = await supabaseClient.rpc('clear_all_bookings');
-        
-        if (error) {
-            // Если функция не работает, удаляем напрямую
-            console.error('RPC error:', error);
-            
-            // Альтернативный метод - прямое удаление
-            const { data: deleteData, error: deleteError } = await supabaseClient
-                .from('schedule_bookings')
-                .delete()
-                .neq('id', 0); // Удаляем все записи
-            
-            if (deleteError) throw deleteError;
-            
-            // Логируем действие
-            await supabaseClient
-                .from('action_logs')
-                .insert({
-                    employee_name: 'ADMIN',
-                    action_type: 'clear_all',
-                    created_at: new Date().toISOString()
-                });
-            
-            showToast('Все записи графика удалены', 'success');
-        } else {
-            showToast(data.message || 'Записи удалены', 'success');
-        }
-        
-        // Обновляем протокол если открыт
-        if (currentTab === 'logs') {
-            loadActionLogs();
-        }
-    } catch (error) {
-        console.error('Error clearing bookings:', error);
-        showToast('Ошибка очистки записей: ' + error.message, 'error');
-    }
-}
-        
-        async function loadActionLogs() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('action_logs')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(500);
-                
-                if (error) throw error;
-                
-                actionLogs = data;
-                displayLogs();
-            } catch (error) {
-                console.error('Error loading logs:', error);
-                showToast('Ошибка загрузки протокола', 'error');
-            }
-        }
-        
-        function displayLogs() {
-            const container = document.getElementById('logsContainer');
-            
-            if (actionLogs.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #999;">Протокол пуст</div>';
-                return;
-            }
-            
-            let html = '';
-            actionLogs.forEach(log => {
-                const date = new Date(log.created_at);
-                const actionText = log.action_type === 'booked' ? '✅ Записался' : 
-                                   log.action_type === 'cancelled' ? '❌ Отменил' :
-                                   log.action_type === 'clear_all' ? '🗑️ ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : log.action_type;
-                
-                const className = log.action_type === 'booked' ? 'log-booked' : 'log-cancelled';
-                
-                if (log.action_type === 'clear_all') {
-                    html += `
-                        <div class="log-entry" style="background: #ffe0b2; color: #e65100; font-weight: bold;">
-                            ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - Очистка всех записей
-                        </div>
-                    `;
-                } else {
-                    html += `
-                        <div class="log-entry ${className}">
-                            ${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - ${actionText} 
-                            ${log.date ? `на ${log.date}` : ''} 
-                            ${log.hour_slot !== null ? `${log.hour_slot}:00-${log.hour_slot + 1}:00` : ''}
-                        </div>
-                    `;
-                }
-            });
-            
-            container.innerHTML = html;
-        }
-        
-        async function exportLogs() {
-            if (actionLogs.length === 0) {
-                showToast('Протокол пуст', 'error');
-                return;
-            }
-            
-            let text = 'ПРОТОКОЛ ДЕЙСТВИЙ СОТРУДНИКОВ\n';
-            text += '================================\n\n';
-            text += `Сформирован: ${new Date().toLocaleString('ru-RU')}\n\n`;
-            
-            actionLogs.forEach(log => {
-                const date = new Date(log.created_at);
-                const actionText = log.action_type === 'booked' ? 'Записался' : 
-                                   log.action_type === 'cancelled' ? 'Отменил' :
-                                   log.action_type === 'clear_all' ? 'ОЧИСТКА ВСЕХ ЗАПИСЕЙ' : log.action_type;
-                
-                if (log.action_type === 'clear_all') {
-                    text += `\n*** ${date.toLocaleString('ru-RU')} - АДМИНИСТРАТОР - ${actionText} ***\n\n`;
-                } else {
-                    text += `${date.toLocaleString('ru-RU')} - ${log.employee_name || 'Неизвестный'} - ${actionText}`;
-                    if (log.date) text += ` на ${log.date}`;
-                    if (log.hour_slot !== null) text += ` ${log.hour_slot}:00-${log.hour_slot + 1}:00`;
-                    text += '\n';
-                }
-            });
-            
-            // Скачиваем файл
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Протокол_${new Date().toISOString().split('T')[0]}.txt`;
-            link.click();
-            
-            showToast('Протокол сохранён', 'success');
-        }
-        
-        async function clearLogs() {
-            if (!confirm('Очистить весь протокол действий?')) {
-                return;
-            }
-            
-            try {
-                const { error } = await supabaseClient
-                    .from('action_logs')
-                    .delete()
-                    .neq('id', 0); // Удаляем все записи
-                
-                if (error) throw error;
-                
-                actionLogs = [];
-                displayLogs();
-                showToast('Протокол очищен', 'success');
-            } catch (error) {
-                console.error('Error clearing logs:', error);
-                showToast('Ошибка очистки протокола', 'error');
             }
         }
         
@@ -1233,9 +836,7 @@ async function clearAllBookings() {
                     <strong>Период редактирования:</strong><br>
                     С ${openFrom.toLocaleString('ru-RU')}<br>
                     По ${openUntil.toLocaleString('ru-RU')}<br><br>
-                    <strong>До закрытия осталось:</strong> ${timeLeftStr}<br><br>
-                    ${scheduleSettings.max_hours_enabled === 'true' ? 
-                      `<strong>⚠️ Ограничение:</strong> макс. ${scheduleSettings.max_hours_limit} часов в неделю` : ''}
+                    <strong>До закрытия осталось:</strong> ${timeLeftStr}
                 `;
                 
             } else {
@@ -1255,102 +856,7 @@ async function clearAllBookings() {
             }
         }
         
-        async function updateScheduleSettings() {
-            const openFrom = document.getElementById('scheduleOpenFrom').value;
-            const openUntil = document.getElementById('scheduleOpenUntil').value;
-            const maxHoursEnabled = document.getElementById('maxHoursToggle').checked;
-            const maxHoursLimit = document.getElementById('maxHoursLimit').value;
-            
-            if (!openFrom || !openUntil) {
-                showToast('Заполните оба поля времени', 'error');
-                return;
-            }
-            
-            // Проверяем корректность дат
-            if (new Date(openFrom) >= new Date(openUntil)) {
-                showToast('Дата окончания должна быть позже даты начала', 'error');
-                return;
-            }
-            
-            try {
-                // Обновляем все настройки
-                const updates = [
-                    { key: 'schedule_open_from', value: openFrom.replace('T', ' ') + ':00' },
-                    { key: 'schedule_open_until', value: openUntil.replace('T', ' ') + ':00' },
-                    { key: 'is_schedule_active', value: 'true' },
-                    { key: 'max_hours_enabled', value: maxHoursEnabled.toString() },
-                    { key: 'max_hours_limit', value: maxHoursLimit }
-                ];
-                
-                for (const update of updates) {
-                    const { error } = await supabaseClient
-                        .from('system_settings')
-                        .update({ 
-                            setting_value: update.value,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('setting_key', update.key);
-                    
-                    if (error) throw error;
-                }
-                
-                // Обновляем локальные настройки
-                scheduleSettings.schedule_open_from = openFrom.replace('T', ' ') + ':00';
-                scheduleSettings.schedule_open_until = openUntil.replace('T', ' ') + ':00';
-                scheduleSettings.is_schedule_active = 'true';
-                scheduleSettings.max_hours_enabled = maxHoursEnabled.toString();
-                scheduleSettings.max_hours_limit = maxHoursLimit;
-                
-                // Обновляем статус
-                updateScheduleStatus();
-                
-                showToast('Настройки сохранены', 'success');
-            } catch (error) {
-                console.error('Error updating settings:', error);
-                showToast('Ошибка сохранения настроек: ' + error.message, 'error');
-            }
-        }
-        
-        // Остальные функции (сотрудники, требования, экспорт) остаются без изменений...
-        // [Здесь остальной код функций, который не изменялся]
-        
-        async function loadEmployees() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('sort_order');
-                
-                if (error) throw error;
-                
-                employees = data;
-                updateEmployeesList();
-            } catch (error) {
-                console.error('Error loading employees:', error);
-            }
-        }
-        
-        function updateEmployeesList() {
-            const listEl = document.getElementById('employeesList');
-            const countEl = document.getElementById('employeeCount');
-            
-            countEl.textContent = employees.length;
-            
-            if (employees.length === 0) {
-                listEl.innerHTML = '<p style="color: #999; text-align: center;">Список пуст</p>';
-                return;
-            }
-            
-            listEl.innerHTML = employees.map((emp, index) => `
-                <div class="employee-item">
-                    <span class="employee-name">${index + 1}. ${emp.full_name}</span>
-                    <button class="delete-btn" onclick="deleteEmployee(${emp.id})">Удалить</button>
-                </div>
-            `).join('');
-        }
-        
-        // Генерация таблицы требований
+        // Генерация таблицы требований на неделю
         function generateRequirementsTable() {
             const weekStartDay = parseInt(document.getElementById('weekStartDay').value || '1');
             const today = new Date();
@@ -1397,6 +903,563 @@ async function clearAllBookings() {
             html += '</tbody>';
             
             document.getElementById('requirementsTable').innerHTML = html;
+        }
+        
+        // Загрузка требований на неделю
+        async function loadWeekRequirements() {
+            const weekStartDay = parseInt(document.getElementById('weekStartDay').value || '1');
+            const today = new Date();
+            
+            // Находим следующий день начала недели
+            const daysUntilStart = (weekStartDay - today.getDay() + 7) % 7 || 7;
+            const nextWeekStart = new Date(today);
+            nextWeekStart.setDate(today.getDate() + daysUntilStart);
+            
+            const nextWeekEnd = new Date(nextWeekStart);
+            nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('slot_requirements')
+                    .select('*')
+                    .gte('date', nextWeekStart.toISOString().split('T')[0])
+                    .lte('date', nextWeekEnd.toISOString().split('T')[0]);
+                
+                if (error) throw error;
+                
+                // Заполняем таблицу данными
+                data.forEach(req => {
+                    const inputEl = document.getElementById(`req_${req.date}_${req.hour_slot}`);
+                    if (inputEl) {
+                        inputEl.value = req.required_count;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading week requirements:', error);
+                showToast('Ошибка загрузки требований', 'error');
+            }
+        }
+        
+        // Сохранение всех требований
+        async function saveAllRequirements() {
+            const inputs = document.querySelectorAll('.requirement-cell-input');
+            const updates = [];
+            
+            inputs.forEach(input => {
+                const date = input.dataset.date;
+                const hour = parseInt(input.dataset.hour);
+                const value = parseInt(input.value) || 0;
+                
+                updates.push({
+                    date: date,
+                    hour_slot: hour,
+                    required_count: value
+                });
+            });
+            
+            try {
+                // Получаем уникальные даты
+                const dates = [...new Set(updates.map(u => u.date))];
+                
+                // Удаляем старые требования для этих дат
+                for (const date of dates) {
+                    await supabaseClient
+                        .from('slot_requirements')
+                        .delete()
+                        .eq('date', date);
+                }
+                
+                // Вставляем новые требования
+                const { error } = await supabaseClient
+                    .from('slot_requirements')
+                    .insert(updates);
+                
+                if (error) throw error;
+                
+                showToast('Требования сохранены', 'success');
+            } catch (error) {
+                console.error('Error saving requirements:', error);
+                showToast('Ошибка сохранения', 'error');
+            }
+        }
+        
+        // Копирование требований дня
+        function copyDayRequirements() {
+            const selectedDay = prompt('Введите номер дня для копирования (1-7):');
+            if (!selectedDay || selectedDay < 1 || selectedDay > 7) {
+                showToast('Неверный номер дня', 'error');
+                return;
+            }
+            
+            const dayIndex = parseInt(selectedDay) - 1;
+            const inputs = document.querySelectorAll('.requirement-cell-input');
+            
+            copiedDayRequirements = [];
+            for (let hour = 0; hour < 24; hour++) {
+                const input = inputs[dayIndex * 24 + hour];
+                if (input) {
+                    copiedDayRequirements.push(parseInt(input.value) || 0);
+                }
+            }
+            
+            showToast('Требования дня скопированы', 'success');
+        }
+        
+        // Вставка требований дня
+        function pasteDayRequirements() {
+            if (!copiedDayRequirements) {
+                showToast('Сначала скопируйте день', 'error');
+                return;
+            }
+            
+            const selectedDay = prompt('Введите номер дня для вставки (1-7):');
+            if (!selectedDay || selectedDay < 1 || selectedDay > 7) {
+                showToast('Неверный номер дня', 'error');
+                return;
+            }
+            
+            const dayIndex = parseInt(selectedDay) - 1;
+            const inputs = document.querySelectorAll('.requirement-cell-input');
+            
+            for (let hour = 0; hour < 24; hour++) {
+                const input = inputs[dayIndex * 24 + hour];
+                if (input && copiedDayRequirements[hour] !== undefined) {
+                    input.value = copiedDayRequirements[hour];
+                }
+            }
+            
+            showToast('Требования вставлены', 'success');
+        }
+        
+        async function updateScheduleSettings() {
+            const openFrom = document.getElementById('scheduleOpenFrom').value;
+            const openUntil = document.getElementById('scheduleOpenUntil').value;
+            
+            if (!openFrom || !openUntil) {
+                showToast('Заполните оба поля времени', 'error');
+                return;
+            }
+            
+            // Проверяем корректность дат
+            if (new Date(openFrom) >= new Date(openUntil)) {
+                showToast('Дата окончания должна быть позже даты начала', 'error');
+                return;
+            }
+            
+            try {
+                // Обновляем настройки
+                const { error: error1 } = await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: openFrom.replace('T', ' ') + ':00',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'schedule_open_from');
+                
+                if (error1) throw error1;
+                
+                const { error: error2 } = await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: openUntil.replace('T', ' ') + ':00',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'schedule_open_until');
+                
+                if (error2) throw error2;
+                
+                // Всегда устанавливаем is_schedule_active в true
+                const { error: error3 } = await supabaseClient
+                    .from('system_settings')
+                    .update({ 
+                        setting_value: 'true',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('setting_key', 'is_schedule_active');
+                
+                if (error3) throw error3;
+                
+                // Обновляем локальные настройки
+                scheduleSettings.schedule_open_from = openFrom.replace('T', ' ') + ':00';
+                scheduleSettings.schedule_open_until = openUntil.replace('T', ' ') + ':00';
+                scheduleSettings.is_schedule_active = 'true';
+                
+                // Обновляем статус
+                updateScheduleStatus();
+                
+                showToast('Настройки сохранены', 'success');
+            } catch (error) {
+                console.error('Error updating settings:', error);
+                showToast('Ошибка сохранения настроек: ' + error.message, 'error');
+            }
+        }
+        
+        // Остальные функции без изменений (сотрудники, экспорт и т.д.)
+        async function loadEmployees() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order');
+                
+                if (error) throw error;
+                
+                employees = data;
+                updateEmployeesList();
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            }
+        }
+        
+        function updateEmployeesList() {
+            const listEl = document.getElementById('employeesList');
+            const countEl = document.getElementById('employeeCount');
+            
+            countEl.textContent = employees.length;
+            
+            if (employees.length === 0) {
+                listEl.innerHTML = '<p style="color: #999; text-align: center;">Список пуст</p>';
+                return;
+            }
+            
+            listEl.innerHTML = employees.map((emp, index) => `
+                <div class="employee-item">
+                    <span class="employee-name">${index + 1}. ${emp.full_name}</span>
+                    <button class="delete-btn" onclick="deleteEmployee(${emp.id})">Удалить</button>
+                </div>
+            `).join('');
+        }
+        
+        async function addEmployee() {
+            const nameInput = document.getElementById('newEmployeeName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showToast('Введите ФИО сотрудника', 'error');
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .insert([{ 
+                        full_name: name,
+                        sort_order: employees.length + 1
+                    }]);
+                
+                if (error) throw error;
+                
+                nameInput.value = '';
+                await loadEmployees();
+                showToast('Сотрудник добавлен', 'success');
+            } catch (error) {
+                console.error('Error adding employee:', error);
+                showToast('Ошибка добавления сотрудника', 'error');
+            }
+        }
+        
+        async function addBulkEmployees() {
+            const textarea = document.getElementById('bulkEmployees');
+            const names = textarea.value.trim().split('\n').filter(n => n.trim());
+            
+            if (names.length === 0) {
+                showToast('Введите имена сотрудников', 'error');
+                return;
+            }
+            
+            try {
+                const newEmployees = names.map((name, index) => ({
+                    full_name: name.trim(),
+                    sort_order: employees.length + index + 1
+                }));
+                
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .insert(newEmployees);
+                
+                if (error) throw error;
+                
+                textarea.value = '';
+                await loadEmployees();
+                showToast(`Добавлено ${names.length} сотрудников`, 'success');
+            } catch (error) {
+                console.error('Error adding bulk employees:', error);
+                showToast('Ошибка массового добавления', 'error');
+            }
+        }
+        
+        async function deleteEmployee(id) {
+            if (!confirm('Удалить сотрудника? Все его записи также будут удалены.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .update({ is_active: false })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                await loadEmployees();
+                showToast('Сотрудник удален', 'success');
+            } catch (error) {
+                console.error('Error deleting employee:', error);
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+        
+        async function clearAllEmployees() {
+            if (!confirm('Удалить ВСЕХ сотрудников? Это действие необратимо!')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .update({ is_active: false })
+                    .eq('is_active', true);
+                
+                if (error) throw error;
+                
+                await loadEmployees();
+                showToast('Все сотрудники удалены', 'success');
+            } catch (error) {
+                console.error('Error clearing employees:', error);
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+        
+        function handleExcelFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    const names = jsonData
+                        .map(row => row[0])
+                        .filter(name => name && typeof name === 'string');
+                    
+                    if (names.length === 0) {
+                        showToast('Не найдено имен в файле', 'error');
+                        return;
+                    }
+                    
+                    const newEmployees = names.map((name, index) => ({
+                        full_name: name.trim(),
+                        sort_order: employees.length + index + 1
+                    }));
+                    
+                    const { error } = await supabaseClient
+                        .from('employees')
+                        .insert(newEmployees);
+                    
+                    if (error) throw error;
+                    
+                    await loadEmployees();
+                    showToast(`Импортировано ${names.length} сотрудников`, 'success');
+                    input.value = '';
+                } catch (error) {
+                    console.error('Error processing Excel:', error);
+                    showToast('Ошибка обработки Excel файла', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Функции экспорта
+        async function exportToExcel() {
+            const dateFrom = document.getElementById('exportDateFrom').value;
+            const dateTo = document.getElementById('exportDateTo').value;
+            
+            if (!dateFrom || !dateTo) {
+                showToast('Выберите период для экспорта', 'error');
+                return;
+            }
+            
+            try {
+                const { data: bookings, error: bookError } = await supabaseClient
+                    .from('schedule_bookings')
+                    .select(`
+                        *,
+                        employees(full_name)
+                    `)
+                    .gte('date', dateFrom)
+                    .lte('date', dateTo)
+                    .order('date')
+                    .order('hour_slot');
+                
+                if (bookError) throw bookError;
+                
+                const { data: requirements, error: reqError } = await supabaseClient
+                    .from('slot_requirements')
+                    .select('*')
+                    .gte('date', dateFrom)
+                    .lte('date', dateTo);
+                
+                if (reqError) throw reqError;
+                
+                const workbook = XLSX.utils.book_new();
+                const scheduleData = [];
+                const dates = [...new Set(bookings.map(b => b.date))].sort();
+                
+                dates.forEach(date => {
+                    scheduleData.push([new Date(date).toLocaleDateString('ru-RU')]);
+                    
+                    const headers = ['Сотрудник'];
+                    for (let h = 0; h < 24; h++) {
+                        headers.push(`${h.toString().padStart(2, '0')}:00`);
+                    }
+                    scheduleData.push(headers);
+                    
+                    const employeesInDate = [...new Set(bookings.filter(b => b.date === date).map(b => b.employees.full_name))];
+                    
+                    employeesInDate.forEach(empName => {
+                        const row = [empName];
+                        for (let h = 0; h < 24; h++) {
+                            const isBooked = bookings.some(b => 
+                                b.date === date && 
+                                b.hour_slot === h && 
+                                b.employees.full_name === empName
+                            );
+                            row.push(isBooked ? '✓' : '');
+                        }
+                        scheduleData.push(row);
+                    });
+                    
+                    const summaryRow = ['ИТОГО'];
+                    for (let h = 0; h < 24; h++) {
+                        const count = bookings.filter(b => b.date === date && b.hour_slot === h).length;
+                        const required = requirements.find(r => r.date === date && r.hour_slot === h)?.required_count || 0;
+                        summaryRow.push(`${count}/${required}`);
+                    }
+                    scheduleData.push(summaryRow);
+                    scheduleData.push([]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(scheduleData);
+                XLSX.utils.book_append_sheet(workbook, ws, 'График');
+                
+                XLSX.writeFile(workbook, `График_${dateFrom}_${dateTo}.xlsx`);
+                showToast('Файл Excel создан', 'success');
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showToast('Ошибка экспорта', 'error');
+            }
+        }
+        
+        async function exportToCSV() {
+            const dateFrom = document.getElementById('exportDateFrom').value;
+            const dateTo = document.getElementById('exportDateTo').value;
+            
+            if (!dateFrom || !dateTo) {
+                showToast('Выберите период для экспорта', 'error');
+                return;
+            }
+            
+            try {
+                const { data: bookings, error } = await supabaseClient
+                    .from('schedule_bookings')
+                    .select(`
+                        *,
+                        employees(full_name)
+                    `)
+                    .gte('date', dateFrom)
+                    .lte('date', dateTo)
+                    .order('date')
+                    .order('hour_slot');
+                
+                if (error) throw error;
+                
+                let csv = 'Дата,Час,Сотрудник\n';
+                bookings.forEach(b => {
+                    csv += `${b.date},${b.hour_slot}:00,${b.employees.full_name}\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `График_${dateFrom}_${dateTo}.csv`;
+                link.click();
+                
+                showToast('CSV файл создан', 'success');
+            } catch (error) {
+                console.error('Error exporting to CSV:', error);
+                showToast('Ошибка экспорта', 'error');
+            }
+        }
+        
+        async function exportToJSON() {
+            const dateFrom = document.getElementById('exportDateFrom').value;
+            const dateTo = document.getElementById('exportDateTo').value;
+            
+            if (!dateFrom || !dateTo) {
+                showToast('Выберите период для экспорта', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('schedule_bookings')
+                    .select(`
+                        *,
+                        employees(*)
+                    `)
+                    .gte('date', dateFrom)
+                    .lte('date', dateTo)
+                    .order('date')
+                    .order('hour_slot');
+                
+                if (error) throw error;
+                
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `График_${dateFrom}_${dateTo}.json`;
+                link.click();
+                
+                showToast('JSON файл создан', 'success');
+            } catch (error) {
+                console.error('Error exporting to JSON:', error);
+                showToast('Ошибка экспорта', 'error');
+            }
+        }
+        
+        async function exportCurrentWeek() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            document.getElementById('exportDateFrom').value = startOfWeek.toISOString().split('T')[0];
+            document.getElementById('exportDateTo').value = endOfWeek.toISOString().split('T')[0];
+            
+            await exportToExcel();
+        }
+        
+        async function exportNextWeek() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfNextWeek = new Date(today);
+            startOfNextWeek.setDate(today.getDate() - dayOfWeek + 8);
+            const endOfNextWeek = new Date(startOfNextWeek);
+            endOfNextWeek.setDate(startOfNextWeek.getDate() + 6);
+            
+            document.getElementById('exportDateFrom').value = startOfNextWeek.toISOString().split('T')[0];
+            document.getElementById('exportDateTo').value = endOfNextWeek.toISOString().split('T')[0];
+            
+            await exportToExcel();
         }
         
         function setDefaultDates() {
