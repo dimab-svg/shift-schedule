@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График смен - Табличный вид</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px 10px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        /* Таймер и статус */
+        .status-timer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .status-timer.active {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
+        .status-timer.inactive {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        .status-timer.scheduled {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+        
+        .timer-title {
+            font-size: 16px;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+        
+        .timer-countdown {
+            font-size: 28px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        .timer-details {
+            font-size: 13px;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        
+        /* Компактный таймер для персональной страницы */
+        .personal-view .status-timer {
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .personal-view .timer-title {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
+        .personal-view .timer-countdown {
+            font-size: 18px;
+        }
+        
+        .personal-view .timer-details {
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .day-section {
+            background: white;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+        
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            padding: 2px;
+            height: 35px;
+            overflow: hidden;
+        }
+        
+        .schedule-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 11px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .schedule-table th.name-column {
+            width: 150px;
+            min-width: 150px;
+            max-width: 150px;
+            text-align: left;
+            padding-left: 10px;
+            background: #f0f0f0;
+        }
+        
+        .schedule-table th.hours-column {
+            width: 50px;
+            background: #f0f0f0;
+        }
+        
+        .schedule-table td.name-cell {
+            text-align: left;
+            padding-left: 10px;
+            font-weight: 500;
+            background: #fafafa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .schedule-table td.name-cell:hover {
+            background: #e8f4fd;
+        }
+        
+        .schedule-table td.hours-cell {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c5282;
+        }
+        
+        /* Выделение всей строки текущего пользователя */
+        .schedule-table tr.current-user td {
+            background: #fffbf0 !important;
+            border-top: 2px solid #ffa000;
+            border-bottom: 2px solid #ffa000;
+        }
+        
+        .schedule-table tr.current-user td:first-child {
+            border-left: 2px solid #ffa000;
+        }
+        
+        .schedule-table tr.current-user td:last-child {
+            border-right: 2px solid #ffa000;
+        }
+        
+        .schedule-table tr.current-user td.name-cell {
+            background: #fff3cd !important;
+            font-weight: bold;
+        }
+        
+        .slot-button {
+            width: 100%;
+            height: 30px;
+            min-height: 30px;
+            max-height: 30px;
+            border: none;
+            background: #fff;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+            padding: 2px;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slot-button:hover:not(:disabled) {
+            background: #e3f2fd;
+        }
+        
+        .slot-button.booked {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .slot-button.booked:hover {
+            background: #45a049;
+        }
+        
+        .slot-button:disabled {
+            background: #ffebee;
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        /* Персональная компактная таблица */
+        .personal-table-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .personal-schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            table-layout: fixed;
+        }
+        
+        .personal-schedule-table th,
+        .personal-schedule-table td {
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            padding: 2px;
+            height: 32px;
+        }
+        
+        .personal-schedule-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 9px;
+        }
+        
+        .personal-schedule-table th.day-column {
+            width: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: left;
+            padding-left: 8px;
+        }
+        
+        .personal-schedule-table td.day-name {
+            background: #f0f0f0;
+            font-weight: 600;
+            text-align: left;
+            padding-left: 8px;
+            font-size: 11px;
+        }
+        
+        .personal-schedule-table .slot-button {
+            height: 25px;
+            min-height: 25px;
+            font-size: 8px;
+        }
+        
+        .personal-schedule-table td.hours-cell {
+            background: #e3f2fd;
+            font-weight: bold;
+            color: #1976d2;
+            font-size: 11px;
+        }
+        
+        .personal-schedule-table .summary-row td {
+            background: #fff3e0;
+            padding: 3px 1px;
+            font-size: 9px;
+        }
+        
+        .personal-schedule-table .summary-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 1px;
+        }
+        
+        .personal-schedule-table .summary-required {
+            color: #f57c00;
+            font-weight: bold;
+            font-size: 9px;
+        }
+        
+        .personal-schedule-table .summary-current {
+            color: #388e3c;
+            font-size: 8px;
+        }
+        
+        .total-hours {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .summary-row {
+            background: #fff3e0 !important;
+            font-weight: bold;
+        }
+        
+        .summary-row td {
+            background: #fff3e0;
+            padding: 5px 2px;
+            font-size: 11px;
+        }
+        
+        .summary-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 2px;
+        }
+        
+        .summary-required {
+            color: #f57c00;
+            font-weight: bold;
+        }
+        
+        .summary-current {
+            color: #388e3c;
+            font-size: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .employee-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fffbf0;
+            border: 2px solid #ffa000;
+            border-radius: 8px;
+        }
+        
+        .employee-selector select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        
+        .employee-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .schedule-table {
+                font-size: 10px;
+            }
+            
+            .schedule-table th.name-column {
+                width: 100px;
+                min-width: 100px;
+            }
+            
+            .slot-button {
+                font-size: 9px;
+            }
+            
+            .timer-countdown {
+                font-size: 22px;
+            }
+            
+            .personal-schedule-table {
+                font-size: 8px;
+            }
+            
+            .personal-schedule-table th {
+                font-size: 7px;
+                padding: 1px;
+            }
+            
+            .personal-schedule-table .slot-button {
+                font-size: 7px;
+                height: 22px;
+                min-height: 22px;
+            }
+            
+            .personal-schedule-table th.day-column {
+                width: 50px;
+                font-size: 8px;
+            }
+            
+            .personal-view .status-timer {
+                padding: 8px;
+            }
+            
+            .personal-view .timer-countdown {
+                font-size: 14px;
+            }
+        }
+        
+        /* Горизонтальная ориентация для мобильных */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .personal-view .status-timer {
+                padding: 5px;
+                margin-bottom: 10px;
+            }
+            
+            .personal-view .timer-countdown {
+                font-size: 14px;
+            }
+            
+            .personal-schedule-table {
+                font-size: 7px;
+            }
+            
+            .personal-schedule-table th,
+            .personal-schedule-table td {
+                height: 22px;
+            }
+            
+            .personal-schedule-table .slot-button {
+                height: 20px;
+                min-height: 20px;
+                font-size: 6px;
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .toast.success {
+            background: #4caf50;
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Таймер и статус -->
+    <div id="statusTimer" class="status-timer">
+        <div class="timer-title">Загрузка...</div>
+        <div class="timer-countdown">--:--:--</div>
+        <div class="timer-details"></div>
+    </div>
+    
+    <div class="header" id="mainHeader">
+        <h1>📅 График смен на неделю</h1>
+        <div class="info">
+            Нажмите на ячейку, чтобы записаться на смену. Повторное нажатие отменяет запись.
+        </div>
+        
+        <div class="employee-selector" id="employeeSelector">
+            <label for="employeeSelect">🔴 Выберите себя из списка для начала работы:</label>
+            <select id="employeeSelect" onchange="selectEmployee()">
+                <option value="">-- Выберите сотрудника --</option>
+            </select>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: white; border: 1px solid #ddd;"></div>
+                <span>Свободно</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #4caf50;"></div>
+                <span>Вы записаны</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ffebee;"></div>
+                <span>Слот заполнен</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fff3e0;"></div>
+                <span>Итого (требуется/записано)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fffbf0; border: 2px solid #ffa000;"></div>
+                <span>Ваша строка</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loading" class="loading">
+        ⏳ Загрузка графика...
+    </div>
+    
+    <div id="schedule-container"></div>
+
+    <script>
+        // ВАЖНО: Замените на ваши данные из Supabase
+        const SUPABASE_URL = 'https://gyraftcengparsbayrll.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_beR5cMb5U2NQUEwJ1Not2g_16xOcp1V';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let currentEmployeeId = null;
+        let currentEmployeeName = null;
+        let employees = [];
+        let requirements = {};
+        let bookings = {};
+        let scheduleSettings = {};
+        let isPersonalView = false;
+        let personalEmployeeId = null;
+        let timerInterval = null;
+        let settingsCheckInterval = null;
+        let weekStartDate = null;
+        let scheduleOpen = false;
+
+
+
+// Возвращает дату в формате YYYY-MM-DD по локальному времени (Москва)
+function formatDateLocal(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+        
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const daysOfWeekShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            checkPersonalView();
+            loadSettings();
+            loadEmployees();
+            startTimer();
+            startSettingsCheck();
+            
+            // Подписка на real-time обновления
+            const subscription = supabaseClient
+                .channel('schedule-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'schedule_bookings' },
+                    () => loadSchedule()
+                )
+                .subscribe();
+        });
+        
+        // Проверяем, персональная ли это страница
+        function checkPersonalView() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const employeeName = urlParams.get('employee');
+            
+            if (employeeName) {
+                isPersonalView = true;
+                document.body.classList.add('personal-view');
+                
+                // Декодируем имя обратно из транслитерации
+                const decodedName = decodeURIComponent(employeeName).replace(/_/g, ' ');
+                
+                // Обновляем интерфейс для персональной страницы
+                const header = document.getElementById('mainHeader');
+                if (header) {
+                    header.innerHTML = `
+                        <h2 style="color: #667eea; margin-bottom: 10px;">📅 Персональный график</h2>
+                        <h3 style="color: #333; margin-bottom: 15px;">${decodedName}</h3>
+                        <div class="info" style="font-size: 13px;">
+                            Выберите часы для работы. Повторное нажатие отменяет выбор.
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Периодическая проверка настроек
+        function startSettingsCheck() {
+            // Проверяем настройки каждые 10 секунд
+            settingsCheckInterval = setInterval(async () => {
+                await loadSettings(true); // true = тихая загрузка без обновления графика
+            }, 10000);
+        }
+        
+        // Таймер
+        function startTimer() {
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            // Проверяем актуальность редактирования через функцию в БД
+            checkScheduleEditability();
+            
+            if (!scheduleSettings.schedule_open_from || !scheduleSettings.schedule_open_until) {
+                return;
+            }
+            
+            const now = new Date();
+            const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
+            const openFrom = new Date(scheduleSettings.schedule_open_from);
+            const openUntil = new Date(scheduleSettings.schedule_open_until);
+            
+            const timerEl = document.getElementById('statusTimer');
+            const titleEl = timerEl.querySelector('.timer-title');
+            const countdownEl = timerEl.querySelector('.timer-countdown');
+            const detailsEl = timerEl.querySelector('.timer-details');
+            
+            // Проверяем реальный статус через настройку is_schedule_active
+            const isManuallyActive = scheduleSettings.is_schedule_active === 'true';
+            
+            if (!isManuallyActive) {
+                // Принудительно отключено в админке
+                timerEl.className = 'status-timer inactive';
+                titleEl.textContent = '🔒 График ЗАКРЫТ администратором';
+                countdownEl.textContent = '--:--:--';
+                detailsEl.textContent = 'Редактирование приостановлено';
+                scheduleOpen = false;
+                
+            } else if (moscowNow < openFrom) {
+                // График ещё не открыт
+                scheduleOpen = false;
+                const msUntilOpen = openFrom - moscowNow;
+                const countdown = formatCountdown(msUntilOpen);
+                
+                timerEl.className = 'status-timer scheduled';
+                titleEl.textContent = '⏰ Редактирование графика будет доступно через:';
+                countdownEl.textContent = countdown;
+                detailsEl.textContent = `Откроется ${openFrom.toLocaleString('ru-RU')}`;
+                
+            } else if (moscowNow >= openFrom && moscowNow <= openUntil) {
+                // График активен
+                scheduleOpen = true;
+                const msLeft = openUntil - moscowNow;
+                const countdown = formatCountdown(msLeft);
+                
+                timerEl.className = 'status-timer active';
+                titleEl.textContent = '✅ График ОТКРЫТ для редактирования';
+                countdownEl.textContent = countdown;
+                detailsEl.textContent = 'До закрытия осталось';
+                
+            } else {
+                // График закрыт по времени
+                scheduleOpen = false;
+                timerEl.className = 'status-timer inactive';
+                titleEl.textContent = '🔒 График ЗАКРЫТ';
+                countdownEl.textContent = '--:--:--';
+                detailsEl.textContent = `Период редактирования завершён ${openUntil.toLocaleString('ru-RU')}`;
+            }
+        }
+        
+        // Проверка доступности редактирования через БД
+        async function checkScheduleEditability() {
+            try {
+                const { data, error } = await supabaseClient
+                    .rpc('is_schedule_editable');
+                
+                if (!error && data !== undefined) {
+                    const wasOpen = scheduleOpen;
+                    scheduleOpen = data;
+                    
+                    // Если статус изменился - перезагружаем график
+                    if (wasOpen !== scheduleOpen) {
+                        loadSchedule();
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking schedule editability:', error);
+            }
+        }
+        
+        function formatCountdown(ms) {
+            const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+            
+            if (days > 0) {
+                return `${days}д ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        async function loadSettings(silent = false) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('system_settings')
+                    .select('*');
+                
+                if (error) throw error;
+                
+                let settingsChanged = false;
+                
+                data.forEach(setting => {
+                    // Проверяем, изменились ли настройки
+                    if (scheduleSettings[setting.setting_key] !== setting.setting_value) {
+                        settingsChanged = true;
+                    }
+                    scheduleSettings[setting.setting_key] = setting.setting_value;
+                });
+                
+                // Если настройки изменились и это не первая загрузка
+                if (settingsChanged && !silent) {
+                    updateTimer();
+                }
+                
+                // При первой загрузке всегда загружаем график
+                if (!silent) {
+                    loadSchedule();
+                }
+                
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        async function loadEmployees() {
+            const { data, error } = await supabaseClient
+                .from('employees')
+                .select('*')
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+            
+            if (error) {
+                console.error('Error loading employees:', error);
+                return;
+            }
+            
+            employees = data;
+            
+            // Если это персональная страница, находим ID сотрудника
+            if (isPersonalView) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const employeeNameTranslit = urlParams.get('employee');
+                
+                // Ищем сотрудника по транслитерированному имени
+                const employee = employees.find(emp => 
+                    transliterate(emp.full_name) === employeeNameTranslit
+                );
+                
+                if (employee) {
+                    currentEmployeeId = employee.id;
+                    currentEmployeeName = employee.full_name;
+                    personalEmployeeId = employee.id;
+                }
+            } else {
+                // Обычная страница - заполняем селектор
+                const select = document.getElementById('employeeSelect');
+                select.innerHTML = '<option value="">-- Выберите сотрудника --</option>' +
+                    employees.map(emp => 
+                        `<option value="${emp.id}">${emp.full_name}</option>`
+                    ).join('');
+                
+                // Восстанавливаем выбор из localStorage
+                const savedId = localStorage.getItem('currentEmployeeId');
+                if (savedId) {
+                    select.value = savedId;
+                    currentEmployeeId = parseInt(savedId);
+                    const employee = employees.find(emp => emp.id === currentEmployeeId);
+                    if (employee) {
+                        currentEmployeeName = employee.full_name;
+                    }
+                }
+            }
+        }
+        
+        function selectEmployee() {
+            const select = document.getElementById('employeeSelect');
+            currentEmployeeId = select.value ? parseInt(select.value) : null;
+            
+            if (currentEmployeeId) {
+                const employee = employees.find(emp => emp.id === currentEmployeeId);
+                currentEmployeeName = employee ? employee.full_name : null;
+                localStorage.setItem('currentEmployeeId', currentEmployeeId);
+            } else {
+                currentEmployeeName = null;
+                localStorage.removeItem('currentEmployeeId');
+            }
+            
+            loadSchedule();
+        }
+        
+        async function loadSchedule() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('schedule-container');
+            
+            try {
+                // Получаем день начала недели из настроек
+                const weekStartDay = parseInt(scheduleSettings.week_start_day || '1');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Вычисляем следующий день начала недели
+                let daysUntilStart;
+                const currentDay = today.getDay();
+                
+                if (currentDay === weekStartDay) {
+                    // Если сегодня день начала недели, начинаем с следующей недели
+                    daysUntilStart = 7;
+                } else if (currentDay < weekStartDay) {
+                    // День начала недели ещё не наступил на этой неделе
+                    daysUntilStart = weekStartDay - currentDay;
+                } else {
+                    // День начала недели уже прошёл, берём следующую неделю
+                    daysUntilStart = 7 - currentDay + weekStartDay;
+                }
+                
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() + daysUntilStart);
+                weekStartDate = new Date(weekStart); // Сохраняем для использования в других функциях
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                // Загружаем требования
+// Строки дат по локальному времени
+const startDateStr = formatDateLocal(weekStart);
+const endDateStr   = formatDateLocal(weekEnd);
+
+// Загружаем требования
+const { data: reqData, error: reqError } = await supabaseClient
+    .from('slot_requirements')
+    .select('*')
+    .gte('date', startDateStr)
+    .lte('date', endDateStr);
+
+if (reqError) throw reqError;
+
+// Преобразуем в удобный формат
+requirements = {};
+reqData.forEach(req => {
+    const key = `${req.date}_${req.hour_slot}`;
+    requirements[key] = req.required_count;
+});
+
+// Загружаем все записи
+const { data: bookData, error: bookError } = await supabaseClient
+    .from('schedule_bookings')
+    .select('*')
+    .gte('date', startDateStr)
+    .lte('date', endDateStr);
+
+if (bookError) throw bookError;
+                
+                if (bookError) throw bookError;
+                
+                // Группируем записи
+                bookings = {};
+                bookData.forEach(book => {
+                    const key = `${book.date}_${book.hour_slot}`;
+                    if (!bookings[key]) bookings[key] = [];
+                    bookings[key].push(book.employee_id);
+                });
+                
+                loading.style.display = 'none';
+                
+                if (isPersonalView) {
+                    container.innerHTML = generatePersonalScheduleHTML(weekStart);
+                } else {
+                    container.innerHTML = generateScheduleHTML(weekStart);
+                }
+                
+            } catch (error) {
+                loading.innerHTML = '❌ Ошибка загрузки: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+        
+        function generateScheduleHTML(weekStart) {
+            let html = '';
+            
+            for (let day = 0; day < 7; day++) {
+                const currentDate = new Date(weekStart);
+                currentDate.setDate(weekStart.getDate() + day);
+                const dateStr = formatDateLocal(currentDate);
+                const dayName = daysOfWeek[currentDate.getDay()];
+                const dateFormatted = currentDate.toLocaleDateString('ru-RU', { 
+                    day: 'numeric', 
+                    month: 'long' 
+                });
+                
+                html += `
+                    <div class="day-section">
+                        <div class="day-header">
+                            ${dayName}, ${dateFormatted}
+                        </div>
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th class="name-column">Сотрудник</th>
+                                    ${generateHourHeaders()}
+                                    <th class="hours-column">Часы</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${generateEmployeeRows(dateStr)}
+                                ${generateSummaryRow(dateStr)}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+        
+        function generatePersonalScheduleHTML(weekStart) {
+            let totalWeekHours = 0;
+            
+            let html = `
+                <div class="personal-table-container">
+                    <table class="personal-schedule-table">
+                        <thead>
+                            <tr>
+                                <th class="day-column">День</th>
+                                ${generateHourHeaders()}
+                                <th style="background: #f0f0f0;">Часы</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            for (let day = 0; day < 7; day++) {
+                const currentDate = new Date(weekStart);
+                currentDate.setDate(weekStart.getDate() + day);
+                const dateStr = formatDateLocal(currentDate);
+                const dayName = daysOfWeekShort[currentDate.getDay()];
+                const dateFormatted = currentDate.toLocaleDateString('ru-RU', { 
+                    day: 'numeric', 
+                    month: 'numeric' 
+                });
+                
+                let dayHours = 0;
+                
+                html += `<tr>
+                    <td class="day-name">${dayName} ${dateFormatted}</td>`;
+                
+                for (let hour = 0; hour < 24; hour++) {
+                    const key = `${dateStr}_${hour}`;
+                    const isBooked = bookings[key]?.includes(personalEmployeeId);
+                    const required = requirements[key] || 0;
+                    const current = bookings[key]?.length || 0;
+                    const isFull = current >= required;
+                    
+                    if (isBooked) dayHours++;
+                    
+                    const start = hour.toString().padStart(2, '0');
+                    
+                    html += `
+                        <td>
+                            <button 
+                                class="slot-button ${isBooked ? 'booked' : ''}"
+                                onclick="toggleBooking(${personalEmployeeId}, '${dateStr}', ${hour})"
+                                ${!isBooked && isFull ? 'disabled' : ''}>
+                                ${start}
+                                ${isBooked ? '✓' : ''}
+                            </button>
+                        </td>
+                    `;
+                }
+                
+                totalWeekHours += dayHours;
+                html += `<td class="hours-cell">${dayHours}</td></tr>`;
+            }
+            
+            // Добавляем строку с требованиями/записано
+            html += '<tr class="summary-row"><td style="background: #fff3e0; font-weight: bold;">Треб./Зап.</td>';
+            
+            // Подсчитываем общие требования для каждого часа недели
+            for (let hour = 0; hour < 24; hour++) {
+                let totalRequired = 0;
+                let totalBooked = 0;
+                
+                for (let day = 0; day < 7; day++) {
+                    const currentDate = new Date(weekStart);
+                    currentDate.setDate(weekStart.getDate() + day);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const key = `${dateStr}_${hour}`;
+                    
+                    totalRequired += requirements[key] || 0;
+                    totalBooked += bookings[key]?.length || 0;
+                }
+                
+                const percentage = totalRequired > 0 ? (totalBooked / totalRequired * 100) : 0;
+                
+                let bgColor = '#fff3e0';
+                if (percentage >= 100) bgColor = '#c8e6c9';
+                else if (percentage >= 70) bgColor = '#fff9c4';
+                else if (percentage >= 40) bgColor = '#ffe0b2';
+                else if (percentage > 0) bgColor = '#ffccbc';
+                
+                html += `
+                    <td style="background: ${bgColor};">
+                        <div class="summary-cell">
+                            <span class="summary-required">${totalRequired}</span>
+                            <span class="summary-current">${totalBooked}</span>
+                        </div>
+                    </td>
+                `;
+            }
+            
+            html += `<td style="background: #fff3e0;">-</td></tr>`;
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="total-hours">
+                    📊 Всего часов на неделе: ${totalWeekHours}
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        function generateHourHeaders() {
+            let headers = '';
+            for (let hour = 0; hour < 24; hour++) {
+                const start = hour.toString().padStart(2, '0');
+                const end = ((hour + 1) % 24).toString().padStart(2, '0');
+                headers += `<th>${start}-${end}</th>`;
+            }
+            return headers;
+        }
+        
+        function generateEmployeeRows(dateStr) {
+            return employees.map(employee => {
+                const isCurrentUser = employee.id === currentEmployeeId;
+                let dayHours = 0;
+                
+                let row = `
+                    <tr ${isCurrentUser ? 'class="current-user"' : ''}>
+                        <td class="name-cell" onclick="openPersonalPage('${employee.full_name}')" 
+                            title="Открыть персональный график">
+                            ${employee.full_name}
+                        </td>
+                `;
+                
+                for (let hour = 0; hour < 24; hour++) {
+                    const key = `${dateStr}_${hour}`;
+                    const isBooked = bookings[key]?.includes(employee.id);
+                    const required = requirements[key] || 0;
+                    const current = bookings[key]?.length || 0;
+                    const isFull = current >= required;
+                    
+                    if (isBooked) dayHours++;
+                    
+                    const start = hour.toString().padStart(2, '0');
+                    const end = ((hour + 1) % 24).toString().padStart(2, '0');
+                    
+                    if (employee.id === currentEmployeeId) {
+                        // Текущий пользователь может нажимать на свои кнопки
+                        row += `
+                            <td>
+                                <button 
+                                    class="slot-button ${isBooked ? 'booked' : ''}"
+                                    onclick="toggleBooking(${employee.id}, '${dateStr}', ${hour})"
+                                    ${!isBooked && isFull ? 'disabled' : ''}>
+                                    ${start}-${end}
+                                    ${isBooked ? '✓' : ''}
+                                </button>
+                            </td>
+                        `;
+                    } else {
+                        // Для других сотрудников показываем только статус
+                        row += `
+                            <td>
+                                <div class="slot-button" style="cursor: default; ${isBooked ? 'background: #e8f5e9;' : ''}">
+                                    ${start}-${end}
+                                    ${isBooked ? '✓' : ''}
+                                </div>
+                            </td>
+                        `;
+                    }
+                }
+                
+                row += `<td class="hours-cell">${dayHours}</td></tr>`;
+                return row;
+            }).join('');
+        }
+        
+        function generateSummaryRow(dateStr) {
+            let row = `
+                <tr class="summary-row">
+                    <td class="name-cell"><strong>Требуется / Записано</strong></td>
+            `;
+            
+            for (let hour = 0; hour < 24; hour++) {
+                const key = `${dateStr}_${hour}`;
+                const required = requirements[key] || 0;
+                const current = bookings[key]?.length || 0;
+                const percentage = required > 0 ? (current / required * 100) : 0;
+                
+                let bgColor = '#fff3e0';
+                if (percentage >= 100) bgColor = '#c8e6c9';
+                else if (percentage >= 70) bgColor = '#fff9c4';
+                else if (percentage >= 40) bgColor = '#ffe0b2';
+                else if (percentage > 0) bgColor = '#ffccbc';
+                
+                row += `
+                    <td style="background: ${bgColor};">
+                        <div class="summary-cell">
+                            <span class="summary-required">${required}</span>
+                            <span class="summary-current">${current}</span>
+                        </div>
+                    </td>
+                `;
+            }
+            
+            row += '<td class="hours-cell">-</td></tr>';
+            return row;
+        }
+        
+        // Транслитерация для URL
+        function transliterate(str) {
+            const ru = {
+                'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
+                'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
+                'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+                'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+                'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
+                'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '',
+                'э': 'e', 'ю': 'yu', 'я': 'ya',
+                'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D',
+                'Е': 'E', 'Ё': 'Yo', 'Ж': 'Zh', 'З': 'Z', 'И': 'I',
+                'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+                'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
+                'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'Ts', 'Ч': 'Ch',
+                'Ш': 'Sh', 'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '',
+                'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya'
+            };
+            
+            return str.split('').map(char => ru[char] || char).join('')
+                .replace(/\s+/g, '_')
+                .replace(/[^a-zA-Z0-9_]/g, '');
+        }
+        
+        function openPersonalPage(employeeName) {
+            const transliteratedName = transliterate(employeeName);
+            const url = `${window.location.origin}${window.location.pathname}?employee=${transliteratedName}`;
+            window.open(url, '_blank');
+        }
+        
+        async function toggleBooking(employeeId, date, hourSlot) {
+            if (!isPersonalView && !currentEmployeeId) {
+                showToast('Сначала выберите себя из списка!', 'error');
+                return;
+            }
+            
+            if (!isPersonalView && employeeId !== currentEmployeeId) {
+                showToast('Вы можете изменять только свои записи!', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient.rpc('toggle_booking', {
+                    p_employee_id: employeeId,
+                    p_date: date,
+                    p_hour_slot: hourSlot
+                });
+                
+                if (error) throw error;
+                
+                if (data.success) {
+                    if (data.action === 'booked') {
+                        showToast('✅ Вы записаны на смену!', 'success');
+                    } else if (data.action === 'cancelled') {
+                        showToast('❌ Запись отменена', 'success');
+                    }
+                    await loadSchedule();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('Ошибка: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        function showToast(message, type) {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Очистка интервалов при закрытии
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            if (settingsCheckInterval) {
+                clearInterval(settingsCheckInterval);
+            }
+        });
+    </script>
+</body>
+</html>
