@@ -722,6 +722,37 @@
                 <button class="button secondary" onclick="copyDayRequirements()">📋 Копировать день</button>
                 <button class="button secondary" onclick="pasteDayRequirements()">📝 Вставить день</button>
             </div>
+
+    <div class="form-group" style="margin-top: 25px;">
+        <label>Быстрая вставка требований списком для одного дня:</label>
+        <p style="font-size: 13px; color: #555;">
+            Выберите номер дня (1–7, сверху вниз в таблице) и вставьте 24 числа через пробел/запятую/табуляцию.
+            Пустые значения будут считаться как 0.
+        </p>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <select id="reqListDay" style="width: 180px;">
+                <option value="1">День 1 (первая строка таблицы)</option>
+                <option value="2">День 2</option>
+                <option value="3">День 3</option>
+                <option value="4">День 4</option>
+                <option value="5">День 5</option>
+                <option value="6">День 6</option>
+                <option value="7">День 7</option>
+            </select>
+            <textarea id="reqListInput"
+                      placeholder="Например: 0 0 1 2 3 4 4 3 2 1 0 0 0 0 0 0 0 1 1 2 2 1 0 0"
+                      style="flex: 1; min-height: 60px; font-size: 13px;"></textarea>
+        </div>
+        <button class="button secondary" style="margin-top: 8px;"
+                onclick="applyRequirementsFromList()">
+            ⏩ Применить список к выбранному дню
+        </button>
+
+       <button class="button" style="margin-top: 4px; padding: 8px 16px; font-size: 13px;"
+            onclick="clearRequirementsListInput()">
+        🧹 Очистить поле ввода
+    </button>
+    </div>
             
             <!-- Вкладка Экспорт -->
             <div id="export-tab" class="tab-content">
@@ -2050,6 +2081,77 @@ const { data, error } = await supabaseClient
             
             showToast('Требования вставлены', 'success');
         }
+
+
+
+// Вставка требований для одного дня из списка чисел
+function applyRequirementsFromList() {
+    const daySelect = document.getElementById('reqListDay');
+    const dayValue = parseInt(daySelect.value, 10); // 1..7
+    const textarea = document.getElementById('reqListInput');
+    const text = (textarea.value || '').trim();
+
+    if (!dayValue || dayValue < 1 || dayValue > 7) {
+        showToast('Выберите номер дня от 1 до 7', 'error');
+        return;
+    }
+
+    if (!text) {
+        showToast('Введите или вставьте список чисел', 'error');
+        return;
+    }
+
+    // заменяем запятые и табы на пробелы, разбиваем по пробелам
+    let tokens = text
+        .replace(/[,;\t]+/g, ' ')
+        .split(/\s+/)
+        .filter(t => t.length > 0);
+
+    if (tokens.length < 24) {
+        showToast(`Найдено только ${tokens.length} значений. Нужно минимум 24.`, 'error');
+        return;
+    }
+
+    // берём только первые 24, лишнее игнорируем
+    tokens = tokens.slice(0, 24);
+
+    const inputs = document.querySelectorAll('.requirement-cell-input');
+    if (!inputs.length) {
+        showToast('Таблица требований ещё не сгенерирована', 'error');
+        return;
+    }
+
+    // В таблице требования идут по строкам: день0(24 инпута), день1(24), ...
+    const dayIndex = dayValue - 1; // 0..6
+    const baseIndex = dayIndex * 24;
+
+    for (let h = 0; h < 24; h++) {
+        const input = inputs[baseIndex + h];
+        if (!input) continue;
+
+        const raw = tokens[h];
+        // допускаем "вых", "-", пусто = 0
+        if (!raw || /^[-]+$/i.test(raw) || /^вых/i.test(raw)) {
+            input.value = 0;
+        } else {
+            const val = parseInt(raw, 10);
+            input.value = isNaN(val) ? 0 : val;
+        }
+    }
+
+    showToast(`Требования для дня ${dayValue} обновлены`, 'success');
+}
+
+
+// Очистка поля быстрого ввода требований
+function clearRequirementsListInput() {
+    const textarea = document.getElementById('reqListInput');
+    if (textarea) {
+        textarea.value = '';
+        textarea.focus();
+    }
+}
+
         
         function setDefaultDates() {
             const today = new Date();
